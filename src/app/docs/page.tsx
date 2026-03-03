@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   BookOpen, Rocket, Server, Settings2, GitBranch,
   Layers, Shield, HelpCircle, Terminal, ChevronRight,
@@ -576,38 +576,80 @@ function Features() {
     {
       name: "Repositories",
       path: "/",
-      desc: "Browse all your personal and organization repositories. Fuzzy search with keyboard navigation. Switch between personal repos and any org via the sidebar.",
-      chips: ["Fuzzy search", "Org switcher", "Workflow status chips"],
+      desc: "Browse all personal and org repositories in one table. Fuzzy search with keyboard navigation (/ to focus, ↑↓ to navigate, Enter to open). Run history bars, 30-day trend sparkline, health badges, and org switcher in the sidebar.",
+      chips: ["Fuzzy search", "Keyboard shortcuts", "Org switcher", "Health badges", "Run history"],
     },
     {
-      name: "Workflow Dashboard",
+      name: "Repository Overview",
+      path: "/repos/[owner]/[repo]",
+      desc: "Repository-level DORA KPI cards (Deploy Frequency, Lead Time, CFR, MTTR) computed from real PR and release data. Expandable drill-down with four charts: PR Cycle Time Breakdown, PR Size vs Velocity scatter, PR Throughput (12 weeks), and Workflow Stability (30d). Below that: Action Duration Trend and a searchable workflow table.",
+      chips: ["DORA 4 Keys", "PR Cycle Breakdown", "Scatter plot", "Throughput chart", "Stability chart"],
+    },
+    {
+      name: "Workflow Detail",
       path: "/repos/[owner]/[repo]/workflows/[id]",
-      desc: "5-tab deep-dive into any workflow. Auto-refreshes every 30 seconds while runs are in progress.",
-      chips: ["Overview", "Performance", "Reliability", "Triggers", "Runs"],
+      desc: "5-tab deep-dive into a single workflow. Auto-refreshes every 30 seconds while runs are active. Includes DORA metrics (CI-based), cost estimation per run, queue wait analysis, anomaly detection, and optimization recommendations.",
+      chips: ["5 tabs", "DORA metrics", "Cost estimate", "Queue analysis", "Anomaly detection", "Optimization tips"],
+    },
+    {
+      name: "Workflow Audit Trail",
+      path: "/repos/[owner]/[repo]/audit",
+      desc: "Full commit history of every .github/workflows/*.yml file in the repo. Shows author, timestamp, commit message, and links to GitHub. Highlights changes made in the last 24 hours.",
+      chips: ["Workflow file history", "Author + timestamp", "Recent-change highlight"],
+    },
+    {
+      name: "Security Scan",
+      path: "/repos/[owner]/[repo]/security",
+      desc: "Static analysis of all workflow YAML files for common security anti-patterns: secret injection via env, pull_request_target misuse, unpin third-party actions, and more. Findings grouped by severity (critical, high, medium, low, info).",
+      chips: ["Static analysis", "Severity grouping", "Per-file findings"],
+    },
+    {
+      name: "Repo Team Stats",
+      path: "/repos/[owner]/[repo]/team",
+      desc: "Per-contributor delivery metrics for a repository: CI pass rate, avg run duration, run count. Reviewer load matrix (author × reviewer heatmap). Bus factor analysis showing which modules have fewer than 2 active contributors.",
+      chips: ["CI leaderboard", "Reviewer matrix", "Bus factor"],
+    },
+    {
+      name: "Team Insights",
+      path: "/team",
+      desc: "Global team performance view — select any repository to see a sortable contributor leaderboard (PRs merged, reviews given, avg lead time, avg PR size, review response time, first-pass approval rate, self-merges, comments) and a reviewer load heatmap.",
+      chips: ["Sortable leaderboard", "Reviewer load matrix", "Repo picker"],
+    },
+    {
+      name: "Contributor Profile",
+      path: "/contributor/[login]",
+      desc: "\"Player card\" for any developer. Shows KPI cards (PRs merged, avg lead time, reviews given, CI pass rate), 52-week activity heatmap, weekly commit bar chart, PR lifecycle funnel, commit hour distribution, languages touched, and a recent PRs table.",
+      chips: ["KPI cards", "52-week heatmap", "PR funnel", "Commit hours", "Languages"],
     },
     {
       name: "Cost Analytics",
       path: "/cost-analytics",
-      desc: "GitHub Actions minutes and cost breakdown. Requires org mode with the Enhanced Billing Platform (Team/Enterprise). Shows per-repo, per-workflow spend.",
-      chips: ["Org mode", "Enhanced Billing required"],
+      desc: "GitHub Actions billing breakdown by SKU and runner type. Month-by-month navigation, burn rate progress bar with warning/critical thresholds, per-org and per-repo drill-down. Requires Enhanced Billing Platform (GitHub Team/Enterprise).",
+      chips: ["Monthly navigation", "SKU breakdown", "Burn rate", "Org mode + Enhanced Billing"],
     },
     {
       name: "Reports",
       path: "/reports",
-      desc: "Scheduled and historical reports backed by the database. Available in organization mode only.",
-      chips: ["Org mode only", "Database required"],
+      desc: "DB-backed historical reporting. Daily area chart of pass/fail rates and quarterly summary table. Includes a manual sync trigger to pull the latest runs into the database.",
+      chips: ["Daily trend", "Quarterly summary", "DB sync"],
     },
     {
       name: "Alerts",
       path: "/alerts",
-      desc: "Define alert rules triggered by workflow outcomes, duration thresholds, or failure streaks. Slack webhook delivery supported.",
-      chips: ["Org mode only", "Database required"],
+      desc: "Define alert rules for CI metrics (failure rate, duration P95, queue wait P95, success streak) and people metrics (PR throughput drop, review response P90, after-hours commit %, PR abandon rate, unreviewed PR age). Rules fire events visible in-app; Slack and email delivery supported.",
+      chips: ["CI alerts", "People alerts", "Browser / Slack / Email", "Rule history"],
     },
     {
       name: "Settings",
       path: "/settings",
-      desc: "Manage your PAT (standalone) or view your OAuth session (org mode). Includes a GitHub Actions billing widget showing remaining free minutes.",
-      chips: ["PAT management", "Billing widget"],
+      desc: "Manage your PAT in standalone mode or view your OAuth session details in org mode. Shows GitHub Actions billing widget with remaining free minutes for the current billing period.",
+      chips: ["PAT management", "Session info", "Billing widget"],
+    },
+    {
+      name: "Org Overview",
+      path: "/org/[orgName]",
+      desc: "Organisation-level reliability heatmap and a sortable repository table with health scores, run history bars, and quick links to each repo's workflow dashboard.",
+      chips: ["Org heatmap", "Repo table", "Health scores"],
     },
   ];
 
@@ -618,20 +660,18 @@ function Features() {
       <div className="grid gap-4">
         {pages.map((p) => (
           <DocCard key={p.name}>
-            <div className="flex items-start justify-between gap-4">
-              <div className="flex-1 space-y-2">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="font-semibold text-white">{p.name}</h3>
-                  <Code>{p.path}</Code>
-                </div>
-                <p className="text-sm text-slate-400">{p.desc}</p>
-                <div className="flex flex-wrap gap-1.5">
-                  {p.chips.map((c) => (
-                    <span key={c} className="text-xs px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-300 border border-slate-600/50">
-                      {c}
-                    </span>
-                  ))}
-                </div>
+            <div className="flex-1 space-y-2">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-semibold text-white">{p.name}</h3>
+                <Code>{p.path}</Code>
+              </div>
+              <p className="text-sm text-slate-400">{p.desc}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {p.chips.map((c) => (
+                  <span key={c} className="text-xs px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-300 border border-slate-600/50">
+                    {c}
+                  </span>
+                ))}
               </div>
             </div>
           </DocCard>
@@ -639,15 +679,26 @@ function Features() {
       </div>
 
       <DocCard>
-        <SubHeading>Workflow Dashboard Tabs</SubHeading>
+        <SubHeading>Workflow Detail Tabs</SubHeading>
         <DocTable
           headers={["Tab", "What you see"]}
           rows={[
-            ["Overview", "Rolling success rate, duration trend, outcome pie chart, run frequency heatmap"],
-            ["Performance", "Per-job avg/p95 bar chart, stacked job waterfall per run, slowest steps table"],
-            ["Reliability", "MTTR, failure streaks, flaky branch detection, re-run rate, pass/fail timeline"],
+            ["Overview", "Rolling success rate, duration trend, outcome pie chart, run frequency heatmap, DORA 4 Keys (CI-based)"],
+            ["Performance", "Per-job avg/p50/p95 bar chart, stacked job waterfall per run, slowest steps table, cost estimate per run"],
+            ["Reliability", "MTTR, failure streaks, flaky branch detection, re-run rate, anomaly detection, pass/fail timeline"],
             ["Triggers", "Event breakdown, top branches, hour-of-day heatmap, day-of-week chart, actor leaderboard"],
-            ["Runs", "Sortable table with commit message, PR link, run attempt count, CSV export"],
+            ["Runs", "Sortable/filterable run table with commit message, PR link, attempt count, queue wait, CSV export"],
+          ]}
+        />
+      </DocCard>
+
+      <DocCard>
+        <SubHeading>DORA Metrics — Two Contexts</SubHeading>
+        <DocTable
+          headers={["Context", "Data source", "Location"]}
+          rows={[
+            ["Repository level", "Merged PRs + GitHub Releases — true delivery pipeline metrics", "/repos/[owner]/[repo] — DORA KPI cards + drill-down"],
+            ["Workflow level", "CI workflow run outcomes — proxy metrics for the build pipeline", "/repos/[owner]/[repo]/workflows/[id] — Overview tab"],
           ]}
         />
       </DocCard>
@@ -668,25 +719,60 @@ function APIReference() {
         {
           method: "GET",
           path: "/api/github/repos",
-          description: "List repositories for the authenticated user or a specified org.",
+          description: "List all repositories accessible to the authenticated user (personal + org).",
           params: [
-            { name: "org", type: "string", optional: true, desc: "Organization slug. If omitted, returns personal repos." },
-            { name: "per_page", type: "number", optional: true, desc: "Results per page (max 100, default 30)." },
+            { name: "org", type: "string", optional: true, desc: "Filter to a specific org slug." },
+          ],
+        },
+        {
+          method: "GET",
+          path: "/api/github/repo-overview",
+          description: "Per-workflow summaries for a repository — status, health, run history, trend, duration points.",
+          params: [
+            { name: "owner", type: "string", optional: false, desc: "Repository owner." },
+            { name: "repo", type: "string", optional: false, desc: "Repository name." },
+          ],
+        },
+        {
+          method: "GET",
+          path: "/api/github/repo-dora",
+          description: "Repository-level DORA 4 Keys computed from merged PRs and releases. Includes cycle breakdown, PR scatter, and throughput by week.",
+          params: [
+            { name: "owner", type: "string", optional: false, desc: "Repository owner." },
+            { name: "repo", type: "string", optional: false, desc: "Repository name." },
+          ],
+        },
+        {
+          method: "GET",
+          path: "/api/github/repo-contributors",
+          description: "Per-contributor delivery stats for a repository: PRs merged, reviews given, avg lead time, avg PR size, review turnaround, first-pass approval rate, self-merges. Also returns reviewer load matrix and bus factor.",
+          params: [
+            { name: "owner", type: "string", optional: false, desc: "Repository owner." },
+            { name: "repo", type: "string", optional: false, desc: "Repository name." },
+          ],
+        },
+        {
+          method: "GET",
+          path: "/api/github/contributor-profile",
+          description: "Full contributor profile: KPI cards, 52-week activity calendar, weekly commits, PR funnel, commit hour distribution, languages, recent PRs.",
+          params: [
+            { name: "owner", type: "string", optional: false, desc: "Org or user context for PR search." },
+            { name: "login", type: "string", optional: false, desc: "GitHub username." },
           ],
         },
         {
           method: "GET",
           path: "/api/github/workflows",
-          description: "List workflows for a repository.",
+          description: "List all GitHub Actions workflows for a repository.",
           params: [
-            { name: "owner", type: "string", optional: false, desc: "Repository owner (user or org slug)." },
+            { name: "owner", type: "string", optional: false, desc: "Repository owner." },
             { name: "repo", type: "string", optional: false, desc: "Repository name." },
           ],
         },
         {
           method: "GET",
           path: "/api/github/runs",
-          description: "Fetch workflow runs for a specific workflow.",
+          description: "Fetch workflow runs for a specific workflow (last 50 by default).",
           params: [
             { name: "owner", type: "string", optional: false, desc: "Repository owner." },
             { name: "repo", type: "string", optional: false, desc: "Repository name." },
@@ -697,19 +783,56 @@ function APIReference() {
         {
           method: "GET",
           path: "/api/github/job-stats",
-          description: "Get per-job timing statistics for a workflow.",
+          description: "Per-job and per-step timing stats for a workflow: avg, p50, p95, max durations, success/failure counts, waterfall data.",
           params: [
             { name: "owner", type: "string", optional: false, desc: "Repository owner." },
             { name: "repo", type: "string", optional: false, desc: "Repository name." },
-            { name: "run_id", type: "number", optional: false, desc: "Workflow run ID." },
+            { name: "workflow_id", type: "number", optional: false, desc: "Workflow ID." },
+          ],
+        },
+        {
+          method: "GET",
+          path: "/api/github/team-stats",
+          description: "CI-level team stats: per-actor run count, success rate, avg duration, activity by day/hour.",
+          params: [
+            { name: "owner", type: "string", optional: false, desc: "Repository owner." },
+            { name: "repo", type: "string", optional: false, desc: "Repository name." },
+            { name: "per_page", type: "number", optional: true, desc: "Runs to analyse (default 100)." },
+          ],
+        },
+        {
+          method: "GET",
+          path: "/api/github/bus-factor",
+          description: "Bus factor analysis: per-file-prefix contributor count and Herfindahl index. Flags modules with fewer than 2 active contributors.",
+          params: [
+            { name: "owner", type: "string", optional: false, desc: "Repository owner." },
+            { name: "repo", type: "string", optional: false, desc: "Repository name." },
+          ],
+        },
+        {
+          method: "GET",
+          path: "/api/github/security-scan",
+          description: "Static analysis of workflow YAML files for security anti-patterns. Returns findings grouped by severity.",
+          params: [
+            { name: "owner", type: "string", optional: false, desc: "Repository owner." },
+            { name: "repo", type: "string", optional: false, desc: "Repository name." },
+          ],
+        },
+        {
+          method: "GET",
+          path: "/api/github/audit-log",
+          description: "Commit history for all .github/workflows/*.yml files, sorted by date.",
+          params: [
+            { name: "owner", type: "string", optional: false, desc: "Repository owner." },
+            { name: "repo", type: "string", optional: false, desc: "Repository name." },
           ],
         },
         {
           method: "POST",
           path: "/api/db/sync",
-          description: "Trigger incremental sync of GitHub workflow data to PostgreSQL.",
+          description: "Trigger incremental sync of GitHub workflow runs to the database. Checks alert rules after sync completes.",
           params: [
-            { name: "org", type: "string", optional: true, desc: "Limit sync to a specific org. If omitted, syncs all accessible repos." },
+            { name: "org", type: "string", optional: true, desc: "Limit sync to a specific org." },
           ],
         },
       ].map((endpoint) => (
@@ -879,10 +1002,39 @@ npm run lint`}
 function ReleaseNotes() {
   const releases = [
     {
-      version: "2.3.0",
-      date: "2026-03-01",
+      version: "2.9.0",
+      date: "2026-03-03",
       badge: "latest",
       badgeColor: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
+      changes: {
+        added: [
+          "DORA 4 Keys at repository level — Deploy Frequency, Lead Time, CFR, MTTR computed from real merged PRs and GitHub Releases",
+          "DORA drill-down charts: PR Cycle Time Breakdown (segmented bar), PR Size vs Velocity (scatter + regression line), PR Throughput (12-week bar), Workflow Stability (30d line with Elite/High reference lines)",
+          "Team Insights page (/team) — global view with repo picker, sortable contributor leaderboard (8 metrics), and reviewer load heatmap",
+          "Contributor Profile page (/contributor/[login]) — KPI cards, 52-week GitHub-style activity heatmap, weekly commit chart, PR lifecycle funnel, commit hour distribution, languages touched, recent PRs table",
+          "Bus factor analysis — per-module contributor Herfindahl index, flags modules with <2 active contributors",
+          "People-based alert metrics: PR throughput drop, review response P90, after-hours commit %, PR abandon rate, unreviewed PR age",
+          "Reviewer Load Matrix component (author × reviewer heatmap) in both /team and repo team pages",
+          "/api/github/repo-dora — new endpoint returning full RepoDoraSummary (5-min cache)",
+          "/api/github/repo-contributors — new endpoint: per-contributor stats + reviewer matrix + bus factor",
+          "/api/github/contributor-profile — new endpoint: full contributor data from PR, review, and commit APIs",
+          "/api/github/bus-factor — new endpoint: per-module concentration analysis",
+          "Docs redesigned to single-section navigation (opencode.ai style) — clicking nav replaces content, no more full-page scroll",
+          "Prev / Next navigation at the bottom of each docs section",
+        ],
+        fixed: [],
+        improved: [
+          "Action Duration Trend (renamed from Duration Trend) on repo overview page",
+          "Docs search (⌘K) now switches to the selected section instead of scrolling",
+          "Version badge in sidebar reads from package.json via NEXT_PUBLIC_APP_VERSION at build time",
+        ],
+      },
+    },
+    {
+      version: "2.3.0",
+      date: "2026-03-01",
+      badge: null,
+      badgeColor: "",
       changes: {
         added: [
           "Modernized /docs page with component library, search, collapsible sidebar, IntersectionObserver ToC",
@@ -1167,41 +1319,33 @@ function DocSidebar({
   );
 }
 
-// ── Main Page ─────────────────────────────────────────────────────────────────
+// ── Section registry ──────────────────────────────────────────────────────────
 
-const SECTION_IDS = ALL_SECTIONS.map((s) => s.id);
+const SECTION_COMPONENTS: Record<string, React.ReactNode> = {
+  "getting-started": <GettingStarted />,
+  "deployment":      <Deployment />,
+  "configuration":   <Configuration />,
+  "modes":           <Modes />,
+  "security":        <Security />,
+  "core-concepts":   <CoreConcepts />,
+  "features":        <Features />,
+  "api-reference":   <APIReference />,
+  "faq":             <FAQ />,
+  "contributing":    <Contributing />,
+  "release-notes":   <ReleaseNotes />,
+};
+
+// ── Main Page ─────────────────────────────────────────────────────────────────
 
 export default function DocsPage() {
   const [active, setActive] = useState("getting-started");
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const observerRef = useRef<IntersectionObserver | null>(null);
 
-  // IntersectionObserver for active section tracking
+  // Scroll to top whenever the active section changes
   useEffect(() => {
-    observerRef.current?.disconnect();
-
-    observerRef.current = new IntersectionObserver(
-      (entries) => {
-        // Find the topmost visible section
-        const visible = entries
-          .filter((e) => e.isIntersecting)
-          .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-
-        if (visible.length > 0) {
-          setActive(visible[0].target.id);
-        }
-      },
-      { rootMargin: "-10% 0px -60% 0px", threshold: 0 }
-    );
-
-    SECTION_IDS.forEach((id) => {
-      const el = document.getElementById(id);
-      if (el) observerRef.current?.observe(el);
-    });
-
-    return () => observerRef.current?.disconnect();
-  }, []);
+    window.scrollTo({ top: 0, behavior: "instant" });
+  }, [active]);
 
   // Cmd+K shortcut
   useEffect(() => {
@@ -1215,20 +1359,16 @@ export default function DocsPage() {
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  const scrollTo = useCallback((id: string) => {
-    setActive(id);
-    const el = document.getElementById(id);
-    if (el) {
-      el.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }, []);
+  const activeIndex = ALL_SECTIONS.findIndex((s) => s.id === active);
+  const prevSection = activeIndex > 0 ? ALL_SECTIONS[activeIndex - 1] : null;
+  const nextSection = activeIndex < ALL_SECTIONS.length - 1 ? ALL_SECTIONS[activeIndex + 1] : null;
 
   return (
     <div className="flex min-h-screen bg-slate-950">
       {/* Sidebar */}
       <DocSidebar
         active={active}
-        onSelect={scrollTo}
+        onSelect={(id) => { setActive(id); setMobileOpen(false); }}
         onSearchOpen={() => setSearchOpen(true)}
         mobileOpen={mobileOpen}
         onMobileClose={() => setMobileOpen(false)}
@@ -1254,22 +1394,41 @@ export default function DocsPage() {
           </button>
         </div>
 
-        {/* Content area */}
-        <main className="max-w-3xl mx-auto px-6 py-10 space-y-20">
-          <GettingStarted />
-          <Deployment />
-          <Configuration />
-          <Modes />
-          <Security />
-          <CoreConcepts />
-          <Features />
-          <APIReference />
-          <FAQ />
-          <Contributing />
-          <ReleaseNotes />
+        {/* Content area — only the active section is rendered */}
+        <main className="max-w-3xl mx-auto px-6 py-10">
+          {SECTION_COMPONENTS[active]}
+
+          {/* Prev / Next navigation */}
+          <div className="mt-16 pt-6 border-t border-slate-800 flex items-center justify-between gap-4">
+            {prevSection ? (
+              <button
+                onClick={() => setActive(prevSection.id)}
+                className="group flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors"
+              >
+                <ChevronRight className="w-4 h-4 rotate-180 shrink-0 text-slate-600 group-hover:text-violet-400 transition-colors" />
+                <div className="text-left">
+                  <p className="text-[10px] text-slate-600 uppercase tracking-wider">Previous</p>
+                  <p className="font-medium">{prevSection.label}</p>
+                </div>
+              </button>
+            ) : <div />}
+
+            {nextSection ? (
+              <button
+                onClick={() => setActive(nextSection.id)}
+                className="group flex items-center gap-2 text-sm text-slate-400 hover:text-white transition-colors text-right"
+              >
+                <div>
+                  <p className="text-[10px] text-slate-600 uppercase tracking-wider">Next</p>
+                  <p className="font-medium">{nextSection.label}</p>
+                </div>
+                <ChevronRight className="w-4 h-4 shrink-0 text-slate-600 group-hover:text-violet-400 transition-colors" />
+              </button>
+            ) : <div />}
+          </div>
 
           {/* Footer */}
-          <footer className="border-t border-slate-800 pt-8 pb-4 text-center text-xs text-slate-600 space-y-1">
+          <footer className="mt-8 pb-4 text-center text-xs text-slate-600 space-y-1">
             <p>GitDash v{process.env.NEXT_PUBLIC_APP_VERSION ?? "2.9.0"} — GitHub Actions Dashboard</p>
             <p>
               <a href="https://github.com/dinhdobathi1992/gitdash" target="_blank" rel="noreferrer" className="hover:text-slate-400 transition-colors">
@@ -1288,7 +1447,7 @@ export default function DocsPage() {
       <DocSearch
         open={searchOpen}
         onClose={() => setSearchOpen(false)}
-        onSelect={scrollTo}
+        onSelect={(id) => { setActive(id); setSearchOpen(false); }}
       />
     </div>
   );
