@@ -27,36 +27,36 @@ const NAV: NavSection[] = [
   {
     title: "Getting Started",
     items: [
-      { id: "getting-started", label: "Introduction",  icon: Rocket },
-      { id: "deployment",      label: "Deployment",    icon: Server },
-      { id: "configuration",   label: "Configuration", icon: Settings2 },
+      { id: "getting-started", label: "Introduction", icon: Rocket },
+      { id: "deployment", label: "Deployment", icon: Server },
+      { id: "configuration", label: "Configuration", icon: Settings2 },
     ],
   },
   {
     title: "Core Concepts",
     items: [
-      { id: "modes",         label: "Auth Modes",     icon: GitBranch },
-      { id: "security",      label: "Security Model", icon: Shield },
-      { id: "core-concepts", label: "Data Sources",   icon: Cpu },
+      { id: "modes", label: "Auth Modes", icon: GitBranch },
+      { id: "security", label: "Security Model", icon: Shield },
+      { id: "core-concepts", label: "Data Sources", icon: Cpu },
     ],
   },
   {
     title: "Features",
     items: [
-      { id: "features",           label: "Feature Overview",    icon: Layers },
-      { id: "feat-repositories",  label: "Repositories",        icon: List,       sub: true },
-      { id: "feat-repo-overview", label: "Repository Overview", icon: BarChart3,  sub: true },
-      { id: "feat-workflow",      label: "Workflow Detail",      icon: Activity,   sub: true },
-      { id: "feat-audit",         label: "Audit Trail",          icon: FileText,   sub: true },
-      { id: "feat-security",      label: "Security Scan",        icon: ShieldAlert, sub: true },
-      { id: "feat-repo-team",     label: "Repo Team Stats",      icon: Trophy,     sub: true },
-      { id: "feat-team",          label: "Team Insights",        icon: Users,      sub: true },
-      { id: "feat-contributor",   label: "Contributor Profile",  icon: User,       sub: true },
-      { id: "feat-cost",          label: "Cost Analytics",       icon: DollarSign, sub: true },
-      { id: "feat-reports",       label: "Reports",              icon: TrendingUp, sub: true },
-      { id: "feat-alerts",        label: "Alerts",               icon: Bell,       sub: true },
-      { id: "feat-settings",      label: "Settings",             icon: Sliders,    sub: true },
-      { id: "feat-org",           label: "Org Overview",         icon: Building2,  sub: true },
+      { id: "features", label: "Feature Overview", icon: Layers },
+      { id: "feat-repositories", label: "Repositories", icon: List, sub: true },
+      { id: "feat-repo-overview", label: "Repository Overview", icon: BarChart3, sub: true },
+      { id: "feat-workflow", label: "Workflow Detail", icon: Activity, sub: true },
+      { id: "feat-audit", label: "Audit Trail", icon: FileText, sub: true },
+      { id: "feat-security", label: "Security Scan", icon: ShieldAlert, sub: true },
+      { id: "feat-repo-team", label: "Repo Team Stats", icon: Trophy, sub: true },
+      { id: "feat-team", label: "Team Insights", icon: Users, sub: true },
+      { id: "feat-contributor", label: "Contributor Profile", icon: User, sub: true },
+      { id: "feat-cost", label: "Cost Analytics", icon: DollarSign, sub: true },
+      { id: "feat-reports", label: "Reports", icon: TrendingUp, sub: true },
+      { id: "feat-alerts", label: "Alerts", icon: Bell, sub: true },
+      { id: "feat-settings", label: "Settings", icon: Sliders, sub: true },
+      { id: "feat-org", label: "Org Overview", icon: Building2, sub: true },
     ],
   },
   {
@@ -68,9 +68,9 @@ const NAV: NavSection[] = [
   {
     title: "Support",
     items: [
-      { id: "faq",           label: "FAQ & Troubleshooting", icon: HelpCircle },
-      { id: "contributing",  label: "Contributing",          icon: GitPullRequest },
-      { id: "release-notes", label: "Release Notes",         icon: Tag },
+      { id: "faq", label: "FAQ & Troubleshooting", icon: HelpCircle },
+      { id: "contributing", label: "Contributing", icon: GitPullRequest },
+      { id: "release-notes", label: "Release Notes", icon: Tag },
     ],
   },
 ];
@@ -115,17 +115,17 @@ function GettingStarted() {
       <SectionHeading id="getting-started" icon={Rocket}>Introduction</SectionHeading>
 
       <FeatureGrid>
-        <FeatureCard icon="📊" title="Workflow Analytics">
-          Deep-dive into success rates, duration trends, MTTR, and failure patterns across all your GitHub Actions workflows.
+        <FeatureCard icon="📊" title="Engineering Intelligence">
+          Deep-dive into DORA metrics, Cycle Time breakdowns, and success rates across all your GitHub Actions workflows and Pull Requests.
         </FeatureCard>
         <FeatureCard icon="💰" title="Cost Analytics">
-          Track GitHub Actions minutes and spend per workflow. Identify expensive jobs and optimize your CI budget.
+          Track GitHub Actions minutes and spend per workflow. Identify runaway costs and optimize your CI budget.
         </FeatureCard>
-        <FeatureCard icon="🔒" title="Security First">
-          Your PAT never touches the browser. AES-256-GCM encrypted sessions, HttpOnly cookies, rate limiting built-in.
+        <FeatureCard icon="🔒" title="Enterprise Security">
+          Your PAT never touches the browser. AES-256-GCM encrypted sessions, HttpOnly cookies, and rate limiting built-in.
         </FeatureCard>
-        <FeatureCard icon="⚡" title="Two Modes">
-          Standalone for personal use (PAT-based, no OAuth App needed) or Organization mode for teams with GitHub OAuth.
+        <FeatureCard icon="👥" title="Team Performance">
+          Reviewer load balancing, CI success rates per contributor, and upcoming deep-dive Contributor Profiles to prevent burnout.
         </FeatureCard>
       </FeatureGrid>
 
@@ -150,7 +150,7 @@ function GettingStarted() {
         <SubHeading>Quick Start — Standalone Mode</SubHeading>
         <ProseP>The fastest way to get running. No OAuth App needed — just your GitHub PAT.</ProseP>
         <CodeBlock language="bash" filename="terminal">
-{`git clone https://github.com/dinhdobathi1992/gitdash.git
+          {`git clone https://github.com/dinhdobathi1992/gitdash.git
 cd gitdash
 cp .env.local.example .env.local
 
@@ -176,7 +176,7 @@ npm run dev`}
           </Step>
           <Step title="Configure .env.local" step={2}>
             <CodeBlock language="bash" filename=".env.local">
-{`MODE=organization
+              {`MODE=organization
 GITHUB_CLIENT_ID=your_client_id
 GITHUB_CLIENT_SECRET=your_client_secret
 SESSION_SECRET=$(openssl rand -hex 32)`}
@@ -184,7 +184,7 @@ SESSION_SECRET=$(openssl rand -hex 32)`}
           </Step>
           <Step title="Start the server" step={3}>
             <CodeBlock language="bash" filename="terminal">
-{`npm install && npm run dev`}
+              {`npm install && npm run dev`}
             </CodeBlock>
           </Step>
         </Steps>
@@ -222,7 +222,7 @@ function Deployment() {
         <Tabs items={["Standalone", "Organization", "Docker Compose"]}>
           <Tab>
             <CodeBlock language="bash">
-{`docker run -d \\
+              {`docker run -d \\
   --name gitdash \\
   -p 3000:3000 \\
   -e MODE=standalone \\
@@ -233,7 +233,7 @@ function Deployment() {
           </Tab>
           <Tab>
             <CodeBlock language="bash">
-{`docker run -d \\
+              {`docker run -d \\
   --name gitdash \\
   -p 3000:3000 \\
   -e MODE=organization \\
@@ -247,7 +247,7 @@ function Deployment() {
           </Tab>
           <Tab>
             <CodeBlock language="yaml" filename="docker-compose.yml">
-{`services:
+              {`services:
   gitdash:
     image: dinhdobathi1992/gitdash:latest
     ports:
@@ -258,7 +258,7 @@ function Deployment() {
             </CodeBlock>
             <div className="p-4 border-t border-slate-700/30">
               <CodeBlock language="bash" filename="terminal">
-{`docker compose up -d      # start
+                {`docker compose up -d      # start
 docker compose down       # stop
 docker compose logs -f    # view logs`}
               </CodeBlock>
@@ -340,7 +340,7 @@ function Configuration() {
         <DocCard>
           <SubHeading>Standalone <Code>.env.local</Code></SubHeading>
           <CodeBlock language="bash" filename=".env.local">
-{`MODE=standalone
+            {`MODE=standalone
 SESSION_SECRET=replace_with_openssl_rand_hex_32
 NEXT_PUBLIC_APP_URL=http://localhost:3000`}
           </CodeBlock>
@@ -349,7 +349,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000`}
         <DocCard>
           <SubHeading>Organization <Code>.env.local</Code></SubHeading>
           <CodeBlock language="bash" filename=".env.local">
-{`MODE=organization
+            {`MODE=organization
 GITHUB_CLIENT_ID=your_oauth_app_client_id
 GITHUB_CLIENT_SECRET=your_oauth_app_client_secret
 SESSION_SECRET=replace_with_openssl_rand_hex_32
@@ -452,7 +452,7 @@ function Modes() {
         <SubHeading>Switching Modes</SubHeading>
         <ProseP>Change the <Code>MODE</Code> environment variable and restart the server. All session data is invalidated automatically — users will be redirected to the appropriate login page.</ProseP>
         <CodeBlock language="bash">
-{`# Switch to org mode
+          {`# Switch to org mode
 MODE=organization
 
 # Switch back to standalone
@@ -475,7 +475,7 @@ function Security() {
       <DocCard>
         <SubHeading>Request Flow</SubHeading>
         <CodeBlock language="text">
-{`Browser ──── request ────► Middleware (decrypt session cookie)
+          {`Browser ──── request ────► Middleware (decrypt session cookie)
                                     │
                                     ├─ No token? ──► Redirect to /setup or /login
                                     │
@@ -504,7 +504,7 @@ function Security() {
             ["Cookie flags", <><Code key="h">HttpOnly</Code> (no JS access), <Code key="s">Secure</Code> (HTTPS only), <Code key="ss">SameSite=Lax</Code> (CSRF protection)</>],
             ["Session secret", "32+ character minimum enforced at startup in production"],
             ["Rate limiting", <><Code key="rl">/api/auth/setup</Code>: 5 req/min/IP · <Code key="rl2">/api/auth/login</Code>: 10 req/min/IP</>],
-            ["Input validation", <>All <Code key="ov">owner</Code>, <Code key="rv">repo</Code>, <Code key="orgv">org</Code> params validated against <Code key="pat">[a-zA-Z0-9_.-]{"{"+"1,100}"}</Code></>],
+            ["Input validation", <>All <Code key="ov">owner</Code>, <Code key="rv">repo</Code>, <Code key="orgv">org</Code> params validated against <Code key="pat">[a-zA-Z0-9_.-]{"{" + "1,100}"}</Code></>],
             ["HTTP headers", "CSP, HSTS, X-Frame-Options: DENY, X-Content-Type-Options: nosniff, Referrer-Policy"],
             ["Docker", "Runs as non-root user nextjs (uid 1001). Built from node:20-alpine."],
           ]}
@@ -515,7 +515,7 @@ function Security() {
         <SubHeading>Self-Audit Commands</SubHeading>
         <ProseP>Run these in the project root to verify security claims yourself:</ProseP>
         <CodeBlock language="bash" filename="terminal">
-{`# PAT never in browser storage
+          {`# PAT never in browser storage
 grep -r "localStorage|sessionStorage" src/ --include="*.tsx"
 # Expected: 0 matches ✓
 
@@ -547,7 +547,7 @@ function CoreConcepts() {
           In standalone mode, every request proxies directly to the GitHub API using your encrypted PAT. No data is stored server-side — all data comes from GitHub in real-time.
         </ProseP>
         <CodeBlock language="text">
-{`Browser ──► /api/github/* ──► GitHub REST API (live)
+          {`Browser ──► /api/github/* ──► GitHub REST API (live)
                                         │
                                No DB storage
                                ~60 req/hr per PAT`}
@@ -563,7 +563,7 @@ function CoreConcepts() {
           In org mode with <Code>DATABASE_URL</Code>, workflow runs are synced to PostgreSQL every 15 minutes (or on-demand via webhook). The UI reads from the DB first, falling back to the GitHub API if data is stale.
         </ProseP>
         <CodeBlock language="text">
-{`Browser ──► /api/db/runs ──► PostgreSQL (fast, historical)
+          {`Browser ──► /api/db/runs ──► PostgreSQL (fast, historical)
                    │
                    └── Stale? ──► GitHub API (fallback)
 
@@ -676,16 +676,16 @@ function Features({ onNavigate }: { onNavigate: (id: string) => void }) {
       name: "Repository Overview",
       path: "/repos/[owner]/[repo]",
       screenshot: "08-repo-overview.png",
-      desc: "Repository-level DORA KPI cards (Deploy Frequency, Lead Time, CFR, MTTR) computed from real PR and release data. Expandable drill-down with four charts: PR Cycle Time Breakdown, PR Size vs Velocity scatter, PR Throughput (12 weeks), and Workflow Stability (30d). Below that: Action Duration Trend and a searchable workflow table.",
-      chips: ["DORA 4 Keys", "PR Cycle Breakdown", "Scatter plot", "Throughput chart", "Stability chart"],
+      desc: "Industry-standard DORA KPI cards (Deploy Frequency, Lead Time, CFR, MTTR) computed with precision from real PR and release data. Expandable intelligent drill-down with four advanced charts: PR Cycle Time Breakdown (Identify bottlenecks), PR Size vs Velocity scatter (Scope discipline), PR Throughput, and Workflow Stability. Below that: Action Duration Trend and a searchable workflow table.",
+      chips: ["DORA 4 Keys", "Cycle Time Breakdown", "Size/Velocity Scatter", "Throughput Trends", "Actionable Stability"],
     },
     {
       id: "feat-workflow",
       name: "Workflow Detail",
       path: "/repos/[owner]/[repo]/workflows/[id]",
       screenshot: "01-overview.png",
-      desc: "5-tab deep-dive into a single workflow. Auto-refreshes every 30 seconds while runs are active. Includes DORA metrics (CI-based), cost estimation per run, queue wait analysis, anomaly detection, and optimization recommendations.",
-      chips: ["5 tabs", "DORA metrics", "Cost estimate", "Queue analysis", "Anomaly detection", "Optimization tips"],
+      desc: "5-tab deep-dive into a single workflow. Auto-refreshes every 30 seconds while runs are active. Includes CI-based DORA metrics, cost estimation per run, queue wait analysis, anomaly detection, and actionable optimization recommendations.",
+      chips: ["Optimization Intelligence", "Cost estimation", "Queue analysis", "Anomaly detection"],
     },
     {
       id: "feat-audit",
@@ -713,19 +713,19 @@ function Features({ onNavigate }: { onNavigate: (id: string) => void }) {
     },
     {
       id: "feat-team",
-      name: "Team Insights",
+      name: "Team Insights (In Development)",
       path: "/team",
       screenshot: "12-team-insights.png",
       desc: "Global team performance view — select any repository to see a sortable contributor leaderboard (PRs merged, reviews given, avg lead time, avg PR size, review response time, first-pass approval rate, self-merges, comments) and a reviewer load heatmap.",
-      chips: ["Sortable leaderboard", "Reviewer load matrix", "Repo picker"],
+      chips: ["Sortable leaderboard", "Reviewer load matrix", "Actionable comparisons"],
     },
     {
       id: "feat-contributor",
-      name: "Contributor Profile",
+      name: "Contributor Profile (Coming Soon)",
       path: "/contributor/[login]",
       screenshot: "13-contributor.png",
-      desc: "\"Player card\" for any developer. Shows KPI cards (PRs merged, avg lead time, reviews given, CI pass rate), 52-week activity heatmap, weekly commit bar chart, PR lifecycle funnel, commit hour distribution, languages touched, and a recent PRs table.",
-      chips: ["KPI cards", "52-week heatmap", "PR funnel", "Commit hours", "Languages"],
+      desc: "The ultimate \"Player card\" for any developer. Shows Elite KPI cards (PRs merged, avg lead time, reviews given, CI pass rate), 52-week activity heatmap, weekly commit bar chart, PR lifecycle funnel, commit hour distribution to monitor burnout, languages touched, and a recent PRs table.",
+      chips: ["52-week heatmap", "Elite KPI cards", "Burnout monitoring", "Lifecycle funnel"],
     },
     {
       id: "feat-cost",
@@ -1455,27 +1455,27 @@ function Contributing() {
         <Steps>
           <Step title="Clone and install" step={1}>
             <CodeBlock language="bash" filename="terminal">
-{`git clone https://github.com/dinhdobathi1992/gitdash.git
+              {`git clone https://github.com/dinhdobathi1992/gitdash.git
 cd gitdash
 npm install`}
             </CodeBlock>
           </Step>
           <Step title="Configure environment" step={2}>
             <CodeBlock language="bash" filename=".env.local">
-{`MODE=standalone
+              {`MODE=standalone
 SESSION_SECRET=any_32_char_string_for_local_dev
 # DATABASE_URL is optional for standalone mode`}
             </CodeBlock>
           </Step>
           <Step title="Start dev server" step={3}>
             <CodeBlock language="bash" filename="terminal">
-{`npm run dev
+              {`npm run dev
 # → http://localhost:3000`}
             </CodeBlock>
           </Step>
           <Step title="Run type checks" step={4}>
             <CodeBlock language="bash" filename="terminal">
-{`npx tsc --noEmit
+              {`npx tsc --noEmit
 npm run lint`}
             </CodeBlock>
           </Step>
@@ -1485,7 +1485,7 @@ npm run lint`}
       <DocCard>
         <SubHeading>Codebase Structure</SubHeading>
         <CodeBlock language="text">
-{`src/
+          {`src/
 ├── app/
 │   ├── (main)/              # App routes (repos, workflows, etc.)
 │   ├── docs/                # This docs page
@@ -1670,14 +1670,14 @@ function ReleaseNotes() {
   ];
 
   const chipColors: Record<string, string> = {
-    added:    "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-    fixed:    "bg-blue-500/10 text-blue-400 border-blue-500/20",
+    added: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
+    fixed: "bg-blue-500/10 text-blue-400 border-blue-500/20",
     improved: "bg-violet-500/10 text-violet-400 border-violet-500/20",
   };
 
   const dotColors: Record<string, string> = {
-    added:    "text-emerald-400",
-    fixed:    "text-blue-400",
+    added: "text-emerald-400",
+    fixed: "text-blue-400",
     improved: "text-violet-400",
   };
 
@@ -1876,30 +1876,30 @@ export default function DocsPage() {
 
   // Section registry is defined here so Features can receive onNavigate
   const SECTION_COMPONENTS: Record<string, React.ReactNode> = {
-    "getting-started":    <GettingStarted />,
-    "deployment":         <Deployment />,
-    "configuration":      <Configuration />,
-    "modes":              <Modes />,
-    "security":           <Security />,
-    "core-concepts":      <CoreConcepts />,
-    "features":           <Features onNavigate={setActive} />,
-    "feat-repositories":  <FeatureRepositories />,
+    "getting-started": <GettingStarted />,
+    "deployment": <Deployment />,
+    "configuration": <Configuration />,
+    "modes": <Modes />,
+    "security": <Security />,
+    "core-concepts": <CoreConcepts />,
+    "features": <Features onNavigate={setActive} />,
+    "feat-repositories": <FeatureRepositories />,
     "feat-repo-overview": <FeatureRepoOverview />,
-    "feat-workflow":      <FeatureWorkflowDetail />,
-    "feat-audit":         <FeatureAudit />,
-    "feat-security":      <FeatureSecurity />,
-    "feat-repo-team":     <FeatureRepoTeam />,
-    "feat-team":          <FeatureTeamInsights />,
-    "feat-contributor":   <FeatureContributor />,
-    "feat-cost":          <FeatureCost />,
-    "feat-reports":       <FeatureReports />,
-    "feat-alerts":        <FeatureAlerts />,
-    "feat-settings":      <FeatureSettings />,
-    "feat-org":           <FeatureOrg />,
-    "api-reference":      <APIReference />,
-    "faq":                <FAQ />,
-    "contributing":       <Contributing />,
-    "release-notes":      <ReleaseNotes />,
+    "feat-workflow": <FeatureWorkflowDetail />,
+    "feat-audit": <FeatureAudit />,
+    "feat-security": <FeatureSecurity />,
+    "feat-repo-team": <FeatureRepoTeam />,
+    "feat-team": <FeatureTeamInsights />,
+    "feat-contributor": <FeatureContributor />,
+    "feat-cost": <FeatureCost />,
+    "feat-reports": <FeatureReports />,
+    "feat-alerts": <FeatureAlerts />,
+    "feat-settings": <FeatureSettings />,
+    "feat-org": <FeatureOrg />,
+    "api-reference": <APIReference />,
+    "faq": <FAQ />,
+    "contributing": <Contributing />,
+    "release-notes": <ReleaseNotes />,
   };
   const [searchOpen, setSearchOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
