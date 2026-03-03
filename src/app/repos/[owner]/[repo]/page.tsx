@@ -6,8 +6,13 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { fetcher } from "@/lib/swr";
 import { WorkflowOverview } from "@/lib/github";
+import type { RepoDoraSummary } from "@/lib/dora";
 import { RepoWorkflowBreadcrumb } from "@/components/Sidebar";
 import { RunHistoryBars, TrendSparkline, StatusBadge, HealthScoreRing } from "@/components/WorkflowMetrics";
+import { DoraKpiCards, DoraKpiSkeleton } from "@/components/DoraKpiCards";
+import { DoraDrillDown } from "@/components/DoraDrillDown";
+import { PrLifecycleExtension, PrLifecycleSkeleton } from "@/components/PrLifecycleExtension";
+import type { OpenPrHealthResponse } from "@/app/api/github/open-pr-health/route";
 import {
   AlertCircle, ExternalLink, GitBranch, FileCode, RefreshCw,
   Search, X, ChevronRight, Zap, Shield, Users, ShieldCheck,
@@ -263,6 +268,23 @@ export default function RepoDetailPage() {
     fetcher<WorkflowOverview[]>
   );
 
+  const {
+    data: dora, isLoading: doraLoading,
+  } = useSWR<RepoDoraSummary>(
+    `/api/github/repo-dora?owner=${owner}&repo=${repo}`,
+    fetcher<RepoDoraSummary>
+  );
+
+  const {
+    data: prHealth, isLoading: prHealthLoading,
+  } = useSWR<OpenPrHealthResponse>(
+    `/api/github/open-pr-health?owner=${owner}&repo=${repo}`,
+    fetcher<OpenPrHealthResponse>
+  );
+
+  const [showDrillDown, setShowDrillDown] = useState(false);
+  const [showPrLifecycle, setShowPrLifecycle] = useState(false);
+
   const [search, setSearch] = useState("");
   const [activeIndex, setActiveIndex] = useState(-1);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -384,9 +406,53 @@ export default function RepoDetailPage() {
         </div>
       ) : (
         <div className="space-y-6">
+          {/* DORA KPI Cards */}
+          {doraLoading ? (
+            <DoraKpiSkeleton />
+          ) : dora ? (
+            <div className="space-y-4">
+              <DoraKpiCards data={dora} />
+
+              {/* Drill-down toggle */}
+              <button
+                onClick={() => setShowDrillDown(v => !v)}
+                className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-violet-300 transition-colors"
+              >
+                <ChevronRight
+                  className={cn("w-3.5 h-3.5 transition-transform", showDrillDown && "rotate-90")}
+                />
+                {showDrillDown ? "Hide" : "Show"} drill-down charts
+              </button>
+
+              {showDrillDown && overview && (
+                <DoraDrillDown dora={dora} overview={overview} />
+              )}
+            </div>
+          ) : null}
+
+          {/* PR Lifecycle Extension (Phase 3) */}
+          <div>
+            <button
+              onClick={() => setShowPrLifecycle(v => !v)}
+              className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-violet-300 transition-colors"
+            >
+              <ChevronRight
+                className={cn("w-3.5 h-3.5 transition-transform", showPrLifecycle && "rotate-90")}
+              />
+              {showPrLifecycle ? "Hide" : "Show"} PR lifecycle analytics
+            </button>
+            {showPrLifecycle && (
+              prHealthLoading ? (
+                <div className="mt-3"><PrLifecycleSkeleton /></div>
+              ) : prHealth ? (
+                <div className="mt-3"><PrLifecycleExtension data={prHealth} /></div>
+              ) : null
+            )}
+          </div>
+
           {/* Duration chart */}
           <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
-            <h2 className="text-sm font-semibold text-white mb-0.5">Duration Trend</h2>
+            <h2 className="text-sm font-semibold text-white mb-0.5">Action Duration Trend</h2>
             <p className="text-xs text-slate-500 mb-4">Run time per workflow (minutes) — last 30 runs each</p>
             <DurationChart workflows={overview ?? []} />
           </div>

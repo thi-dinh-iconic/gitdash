@@ -6,7 +6,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import useSWR from "swr";
 import {
   LayoutDashboard, Settings, GitBranch, ChevronRight,
-  ChevronDown, LogOut, Key, DollarSign, BarChart3, Bell, BookOpen,
+  ChevronDown, LogOut, Key, DollarSign, BarChart3, Bell, BookOpen, Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/AuthProvider";
@@ -15,6 +15,7 @@ import { GitHubOrg } from "@/lib/github";
 
 const NAV = [
   { href: "/", label: "Repositories", icon: LayoutDashboard },
+  { href: "/team", label: "Team Insights", icon: Users },
   { href: "/cost-analytics", label: "Cost Analytics", icon: DollarSign },
   { href: "/reports", label: "Reports", icon: BarChart3 },
   { href: "/alerts", label: "Alerts", icon: Bell },
@@ -67,7 +68,7 @@ export default function Sidebar() {
           className="group flex items-center gap-2 px-2.5 py-1.5 rounded-lg bg-violet-500/10 border border-violet-500/20 hover:bg-violet-500/15 hover:border-violet-500/35 transition-colors w-fit"
         >
           <span className="text-xs font-bold text-violet-300 font-mono tracking-tight">
-            v{process.env.NEXT_PUBLIC_APP_VERSION ?? "2.0.0"}
+            v{process.env.NEXT_PUBLIC_APP_VERSION ?? "2.9.0"}
           </span>
           <span className="text-[10px] text-violet-500 group-hover:text-violet-400 transition-colors">
             Release Notes ↗

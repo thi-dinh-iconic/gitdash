@@ -513,6 +513,95 @@ export async function evaluateAlertRulesForRepo(repoKey: string): Promise<number
         else break;
       }
       value = streak;
+
+    // ── People-based metrics (Phase 5) ──────────────────────────────────────
+
+    } else if (rule.metric === "pr_throughput_drop") {
+      // Compare merged PR count in current window vs prior window of same length
+      // Value = % drop.  threshold e.g. 30 means "fire if >30% drop"
+      const rows = await getDb()`
+        SELECT
+          COUNT(*) FILTER (
+            WHERE merged_at >= NOW() - (${rule.window_hours} || ' hours')::INTERVAL
+          )::int AS current_count,
+          COUNT(*) FILTER (
+            WHERE merged_at >= NOW() - (${rule.window_hours * 2} || ' hours')::INTERVAL
+              AND merged_at < NOW() - (${rule.window_hours} || ' hours')::INTERVAL
+          )::int AS prior_count
+        FROM workflow_runs
+        WHERE repo = ${repoKey}
+          AND status = 'completed'
+          AND conclusion = 'success'
+          AND merged_at IS NOT NULL
+      ` as { current_count: number; prior_count: number }[];
+      const row = rows[0];
+      if (row && row.prior_count > 0) {
+        const drop = Math.round(((row.prior_count - row.current_count) / row.prior_count) * 100);
+        value = Math.max(0, drop); // only positive drops
+      }
+
+    } else if (rule.metric === "review_response_p90") {
+      // P90 time-to-first-review in hours for PRs merged in the window
+      // This requires a separate table or GitHub API. For DB-backed alerts,
+      // we check workflow_runs queue_wait_ms as a proxy (actor response time).
+      // In a full implementation, this would query a dedicated pr_reviews table.
+      const rows = await getDb()`
+        SELECT PERCENTILE_CONT(0.90) WITHIN GROUP (ORDER BY queue_wait_ms)::int AS p90
+        FROM workflow_runs
+        WHERE repo = ${repoKey}
+          AND queue_wait_ms > 0
+          AND created_at >= NOW() - (${rule.window_hours} || ' hours')::INTERVAL
+      ` as { p90: number | null }[];
+      const p90ms = rows[0]?.p90 ?? null;
+      if (p90ms !== null) value = Math.round(p90ms / 3_600_000); // convert ms to hours
+
+    } else if (rule.metric === "afterhours_commit_pct") {
+      // % of workflow runs triggered outside business hours (9-18 local, approx UTC)
+      // Uses run created_at hour as proxy for commit time
+      const rows = await getDb()`
+        SELECT
+          COUNT(*)::int AS total,
+          COUNT(*) FILTER (
+            WHERE EXTRACT(HOUR FROM created_at) < 9
+               OR EXTRACT(HOUR FROM created_at) >= 18
+          )::int AS afterhours
+        FROM workflow_runs
+        WHERE repo = ${repoKey}
+          AND status = 'completed'
+          AND created_at >= NOW() - (${rule.window_hours} || ' hours')::INTERVAL
+      ` as { total: number; afterhours: number }[];
+      const row = rows[0];
+      if (row && row.total > 0) {
+        value = Math.round((row.afterhours / row.total) * 100);
+      }
+
+    } else if (rule.metric === "pr_abandon_rate") {
+      // % of runs concluded as "cancelled" vs total completed runs
+      // Proxy for PR abandon: cancelled workflow runs often correlate with closed-without-merge PRs
+      const rows = await getDb()`
+        SELECT
+          COUNT(*)::int AS total,
+          COUNT(*) FILTER (WHERE conclusion = 'cancelled')::int AS abandoned
+        FROM workflow_runs
+        WHERE repo = ${repoKey}
+          AND status = 'completed'
+          AND created_at >= NOW() - (${rule.window_hours} || ' hours')::INTERVAL
+      ` as { total: number; abandoned: number }[];
+      const row = rows[0];
+      if (row && row.total > 0) {
+        value = Math.round((row.abandoned / row.total) * 100);
+      }
+
+    } else if (rule.metric === "unreviewed_pr_age") {
+      // Max age (in days) of workflow runs that are still in_progress / queued
+      // Proxy for stale open PRs — long-pending runs signal unreviewed work
+      const rows = await getDb()`
+        SELECT MAX(EXTRACT(EPOCH FROM (NOW() - created_at)) / 86400)::int AS max_age_days
+        FROM workflow_runs
+        WHERE repo = ${repoKey}
+          AND status IN ('queued', 'in_progress', 'waiting')
+      ` as { max_age_days: number | null }[];
+      value = rows[0]?.max_age_days ?? null;
     }
 
     if (value === null) continue;
@@ -543,10 +632,16 @@ export async function evaluateAlertRulesForRepo(repoKey: string): Promise<number
 // ── Slack delivery ────────────────────────────────────────────────────────────
 
 const METRIC_LABELS: Record<string, { label: string; unit: string }> = {
-  failure_rate:    { label: "Failure Rate",   unit: "%" },
-  duration_p95:   { label: "Duration P95",    unit: " min" },
-  queue_wait_p95: { label: "Queue Wait P95",  unit: " min" },
-  success_streak: { label: "Failure Streak",  unit: " runs" },
+  failure_rate:          { label: "Failure Rate",          unit: "%" },
+  duration_p95:         { label: "Duration P95",           unit: " min" },
+  queue_wait_p95:       { label: "Queue Wait P95",         unit: " min" },
+  success_streak:       { label: "Failure Streak",         unit: " runs" },
+  // People-based metrics
+  pr_throughput_drop:   { label: "PR Throughput Drop",     unit: "%" },
+  review_response_p90:  { label: "Review Response P90",    unit: " hrs" },
+  afterhours_commit_pct:{ label: "After-Hours Commits",    unit: "%" },
+  pr_abandon_rate:      { label: "PR Abandon Rate",        unit: "%" },
+  unreviewed_pr_age:    { label: "Unreviewed PR Age",      unit: " days" },
 };
 
 async function deliverSlackAlert(

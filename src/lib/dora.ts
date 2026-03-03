@@ -295,6 +295,245 @@ export const LEVEL_LABELS: Record<DoraLevel, string> = {
   low: "Low",
 };
 
+// ── PR-based DORA input types ─────────────────────────────────────────────────
+
+/** Minimal PR shape needed for DORA calculation — sourced from GitHub pulls.list */
+export interface PrInput {
+  number: number;
+  title: string;
+  created_at: string;
+  merged_at: string;
+  head_ref: string;
+}
+
+/** Per-PR detail fetched in a separate batch (commits + reviews + size) */
+export interface PrDetailInput {
+  number: number;
+  first_commit_at: string | null;
+  first_review_at: string | null;
+  approved_at: string | null;
+  additions: number;
+  deletions: number;
+}
+
+export interface ReleaseInput {
+  published_at: string;
+}
+
+// ── PR-based DORA output types ────────────────────────────────────────────────
+
+export interface RepoCycleBreakdown {
+  /** First commit on PR → PR created_at */
+  avg_time_to_open_ms: number;
+  /** PR created_at → first review submitted */
+  avg_pickup_ms: number;
+  /** First review → approval */
+  avg_review_ms: number;
+  /** Approval (or first review) → merged */
+  avg_merge_ms: number;
+  sample_size: number;
+}
+
+export interface PrScatterPoint {
+  number: number;
+  title: string;
+  /** additions + deletions */
+  loc: number;
+  hours_to_merge: number;
+  merged_at: string;
+}
+
+export interface ThroughputWeek {
+  /** ISO date string for Monday of that week */
+  week_start: string;
+  count: number;
+}
+
+export interface RepoDoraSummary extends DoraMetrics {
+  cycle_breakdown: RepoCycleBreakdown;
+  pr_scatter: PrScatterPoint[];
+  throughput_by_week: ThroughputWeek[];
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function getWeekStart(date: Date): string {
+  const d = new Date(date);
+  const day = d.getUTCDay();
+  const diff = day === 0 ? -6 : 1 - day; // shift to Monday
+  d.setUTCDate(d.getUTCDate() + diff);
+  return d.toISOString().slice(0, 10);
+}
+
+function avgMs(arr: number[]): number {
+  return arr.length ? Math.round(arr.reduce((s, v) => s + v, 0) / arr.length) : 0;
+}
+
+// ── PR-based DORA calculation ─────────────────────────────────────────────────
+
+/**
+ * Calculate all four DORA metrics plus drill-down data from merged PR history.
+ *
+ * Deployment frequency: prefers GitHub Releases; falls back to merged PRs.
+ * Lead time: first commit (or PR created_at) → merged_at.
+ * CFR: hotfix / revert PRs as a fraction of total merged PRs.
+ * MTTR: created_at → merged_at of each hotfix/revert PR.
+ */
+export function calculateRepoDora(
+  mergedPrs: PrInput[],
+  releases: ReleaseInput[],
+  detailMap: Map<number, PrDetailInput>,
+): RepoDoraSummary {
+  const sortedPrs = [...mergedPrs].sort(
+    (a, b) => new Date(a.merged_at).getTime() - new Date(b.merged_at).getTime(),
+  );
+
+  // ── 1. Deployment Frequency ──────────────────────────────────────────────
+  const deployTs =
+    releases.length > 0
+      ? releases.map(r => new Date(r.published_at).getTime()).sort((a, b) => a - b)
+      : sortedPrs.map(pr => new Date(pr.merged_at).getTime());
+
+  let periodDays = 30;
+  if (deployTs.length >= 2) {
+    periodDays = Math.max(1, (deployTs[deployTs.length - 1] - deployTs[0]) / 86_400_000);
+  }
+  const perDay = deployTs.length / periodDays;
+  const dfLevel = deployFreqLevel(perDay);
+
+  // ── 2. Lead Time ─────────────────────────────────────────────────────────
+  const leadTimes: number[] = [];
+  for (const pr of mergedPrs) {
+    const detail = detailMap.get(pr.number);
+    const startTs = detail?.first_commit_at
+      ? new Date(detail.first_commit_at).getTime()
+      : new Date(pr.created_at).getTime();
+    const lt = new Date(pr.merged_at).getTime() - startTs;
+    if (lt > 0) leadTimes.push(lt);
+  }
+  const sortedLT = [...leadTimes].sort((a, b) => a - b);
+  const medianLT = percentile(sortedLT, 0.5);
+  const p95LT = percentile(sortedLT, 0.95);
+  const ltLevel = leadTimeLevel(medianLT);
+
+  // ── 3. Change Failure Rate ────────────────────────────────────────────────
+  const isFailurePr = (pr: PrInput) =>
+    /hotfix|revert|fix-prod|emergency/i.test(pr.head_ref) ||
+    pr.title.toLowerCase().startsWith("revert ");
+  const failurePrs = mergedPrs.filter(isFailurePr);
+  const cfr = mergedPrs.length > 0 ? (failurePrs.length / mergedPrs.length) * 100 : 0;
+  const cfrLvl = cfrLevel(cfr);
+
+  // ── 4. MTTR ───────────────────────────────────────────────────────────────
+  // Proxy: time from hotfix/revert PR created to merged (how quickly the fix landed)
+  const recoveryTimes = failurePrs
+    .map(pr => new Date(pr.merged_at).getTime() - new Date(pr.created_at).getTime())
+    .filter(t => t > 0);
+  const meanMttr =
+    recoveryTimes.length > 0
+      ? Math.round(recoveryTimes.reduce((a, b) => a + b, 0) / recoveryTimes.length)
+      : null;
+  const mttrLvl = mttrLevel(meanMttr);
+
+  // ── 5. Cycle Breakdown ────────────────────────────────────────────────────
+  const phases = mergedPrs
+    .map(pr => {
+      const d = detailMap.get(pr.number);
+      if (!d) return null;
+      const created = new Date(pr.created_at).getTime();
+      const merged = new Date(pr.merged_at).getTime();
+      const firstCommit = d.first_commit_at ? new Date(d.first_commit_at).getTime() : created;
+      const firstReview = d.first_review_at ? new Date(d.first_review_at).getTime() : null;
+      const approved = d.approved_at ? new Date(d.approved_at).getTime() : null;
+      const mergeFrom = approved ?? firstReview ?? created;
+      return {
+        time_to_open: Math.max(0, created - firstCommit),
+        pickup: firstReview ? Math.max(0, firstReview - created) : 0,
+        review: firstReview && approved ? Math.max(0, approved - firstReview) : 0,
+        merge: Math.max(0, merged - mergeFrom),
+      };
+    })
+    .filter(Boolean) as { time_to_open: number; pickup: number; review: number; merge: number }[];
+
+  const cycle_breakdown: RepoCycleBreakdown = {
+    avg_time_to_open_ms: avgMs(phases.map(p => p.time_to_open)),
+    avg_pickup_ms: avgMs(phases.map(p => p.pickup)),
+    avg_review_ms: avgMs(phases.map(p => p.review)),
+    avg_merge_ms: avgMs(phases.map(p => p.merge)),
+    sample_size: phases.length,
+  };
+
+  // ── 6. PR Scatter ─────────────────────────────────────────────────────────
+  const pr_scatter: PrScatterPoint[] = mergedPrs
+    .map(pr => {
+      const detail = detailMap.get(pr.number);
+      if (!detail) return null;
+      const loc = detail.additions + detail.deletions;
+      const hours =
+        (new Date(pr.merged_at).getTime() - new Date(pr.created_at).getTime()) / 3_600_000;
+      if (loc <= 0 || hours <= 0) return null;
+      return {
+        number: pr.number,
+        title: pr.title,
+        loc,
+        hours_to_merge: Math.round(hours * 10) / 10,
+        merged_at: pr.merged_at,
+      };
+    })
+    .filter(Boolean) as PrScatterPoint[];
+
+  // ── 7. Throughput by week (last 12 weeks) ─────────────────────────────────
+  const weekMap: Record<string, number> = {};
+  for (let i = 11; i >= 0; i--) {
+    const d = new Date();
+    d.setUTCDate(d.getUTCDate() - i * 7);
+    weekMap[getWeekStart(d)] = 0;
+  }
+  for (const pr of mergedPrs) {
+    const w = getWeekStart(new Date(pr.merged_at));
+    if (w in weekMap) weekMap[w] = (weekMap[w] ?? 0) + 1;
+  }
+  const throughput_by_week: ThroughputWeek[] = Object.entries(weekMap)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([week_start, count]) => ({ week_start, count }));
+
+  const overall = worstLevel(dfLevel, ltLevel, cfrLvl, mttrLvl);
+
+  return {
+    deployment_frequency: {
+      per_day: Math.round(perDay * 100) / 100,
+      total: deployTs.length,
+      period_days: Math.round(periodDays),
+      level: dfLevel,
+      label: deployFreqLabel(perDay),
+    },
+    lead_time: {
+      median_ms: medianLT,
+      p95_ms: p95LT,
+      sample_size: sortedLT.length,
+      level: ltLevel,
+      label: leadTimeLabel(medianLT),
+    },
+    change_failure_rate: {
+      rate: Math.round(cfr * 10) / 10,
+      failures: failurePrs.length,
+      total: mergedPrs.length,
+      level: cfrLvl,
+      label: cfrLabel(cfr),
+    },
+    mttr: {
+      mean_ms: meanMttr,
+      recoveries: recoveryTimes.length,
+      level: mttrLvl,
+      label: mttrLabel(meanMttr),
+    },
+    overall_level: overall,
+    cycle_breakdown,
+    pr_scatter,
+    throughput_by_week,
+  };
+}
+
 /** Benchmark descriptions for each metric and level. */
 export const BENCHMARKS = {
   deployment_frequency: {

@@ -8,7 +8,8 @@ import { Breadcrumb } from "@/components/Sidebar";
 import { RepoPicker } from "@/components/RepoPicker";
 import {
   Bell, Plus, Trash2, ToggleLeft, ToggleRight, AlertCircle,
-  CheckCircle2, Clock, TrendingUp, Zap, Info,
+  CheckCircle2, Clock, TrendingUp, TrendingDown, Zap, Info,
+  Moon, GitPullRequestClosed, AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
@@ -23,11 +24,18 @@ interface AlertsResponse {
 
 // ── Metric helpers ────────────────────────────────────────────────────────────
 
-const METRIC_META: Record<string, { label: string; unit: string; description: string; icon: React.ElementType }> = {
-  failure_rate:    { label: "Failure Rate",      unit: "%",  description: "Alert when failure rate exceeds threshold in window", icon: AlertCircle },
-  duration_p95:   { label: "Duration P95",       unit: "min", description: "Alert when p95 run duration exceeds threshold",       icon: Clock },
-  queue_wait_p95: { label: "Queue Wait P95",     unit: "min", description: "Alert when p95 queue wait exceeds threshold",         icon: TrendingUp },
-  success_streak: { label: "Success Streak",     unit: "runs", description: "Alert when consecutive failures exceed threshold",   icon: Zap },
+const METRIC_META: Record<string, { label: string; unit: string; description: string; icon: React.ElementType; category?: string }> = {
+  // ── CI metrics ──────────────────────────────────────────────────────────────
+  failure_rate:    { label: "Failure Rate",      unit: "%",    description: "Alert when failure rate exceeds threshold in window",     icon: AlertCircle, category: "CI" },
+  duration_p95:   { label: "Duration P95",       unit: "min",  description: "Alert when p95 run duration exceeds threshold",           icon: Clock, category: "CI" },
+  queue_wait_p95: { label: "Queue Wait P95",     unit: "min",  description: "Alert when p95 queue wait exceeds threshold",             icon: TrendingUp, category: "CI" },
+  success_streak: { label: "Success Streak",     unit: "runs", description: "Alert when consecutive failures exceed threshold",        icon: Zap, category: "CI" },
+  // ── People metrics ─────────────────────────────────────────────────────────
+  pr_throughput_drop:    { label: "PR Throughput Drop",    unit: "%",    description: "Alert when merged PRs drop >threshold% vs prior window",                 icon: TrendingDown, category: "People" },
+  review_response_p90:  { label: "Review Response P90",   unit: "hrs",  description: "Alert when P90 time-to-first-review exceeds threshold hours",              icon: Clock, category: "People" },
+  afterhours_commit_pct:{ label: "After-Hours Commits",   unit: "%",    description: "Alert when after-hours commit % exceeds threshold (burnout risk)",         icon: Moon, category: "People" },
+  pr_abandon_rate:      { label: "PR Abandon Rate",       unit: "%",    description: "Alert when closed-without-merge PRs exceed threshold% of opened",         icon: GitPullRequestClosed, category: "People" },
+  unreviewed_pr_age:    { label: "Unreviewed PR Age",     unit: "days", description: "Alert when any open PR has no review after threshold business days",       icon: AlertTriangle, category: "People" },
 };
 
 const CHANNEL_META: Record<string, { label: string; color: string }> = {
@@ -205,9 +213,16 @@ function CreateRuleForm({ onCreated }: { onCreated: () => void }) {
             onChange={(e) => setMetric(e.target.value)}
             className="w-full px-3 py-2 bg-slate-900/60 border border-slate-700 rounded-lg text-sm text-slate-200 focus:outline-none focus:ring-2 focus:ring-violet-500/40 cursor-pointer"
           >
-            {Object.entries(METRIC_META).map(([key, m]) => (
-              <option key={key} value={key}>{m.label}</option>
-            ))}
+            <optgroup label="CI Metrics">
+              {Object.entries(METRIC_META).filter(([, m]) => m.category === "CI").map(([key, m]) => (
+                <option key={key} value={key}>{m.label}</option>
+              ))}
+            </optgroup>
+            <optgroup label="People Metrics">
+              {Object.entries(METRIC_META).filter(([, m]) => m.category === "People").map(([key, m]) => (
+                <option key={key} value={key}>{m.label}</option>
+              ))}
+            </optgroup>
           </select>
         </div>
 

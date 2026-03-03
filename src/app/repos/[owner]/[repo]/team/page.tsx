@@ -1,11 +1,17 @@
 "use client";
 
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import useSWR from "swr";
 import { fetcher } from "@/lib/swr";
 import { RepoWorkflowBreadcrumb } from "@/components/Sidebar";
+import { TeamLeaderboard } from "@/components/TeamLeaderboard";
+import { ReviewerLoadMatrix } from "@/components/ReviewerLoadMatrix";
+import { BusFactorHeatmap, BusFactorSkeleton } from "@/components/BusFactorHeatmap";
 import type { TeamStatsResponse, ContributorStat } from "@/app/api/github/team-stats/route";
+import type { RepoContributorsResponse } from "@/app/api/github/repo-contributors/route";
+import type { BusFactorResponse } from "@/app/api/github/bus-factor/route";
 import {
   AlertCircle,
   Users,
@@ -16,6 +22,11 @@ import {
   Trophy,
   Shield,
   ArrowLeft,
+  ChevronRight,
+  GitPullRequest,
+  BarChart3,
+  Grid3X3,
+  FolderTree,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -313,6 +324,9 @@ function SummaryBar({ data }: { data: TeamStatsResponse }) {
 
 export default function TeamAnalyticsPage() {
   const { owner, repo } = useParams<{ owner: string; repo: string }>();
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [showMatrix, setShowMatrix] = useState(false);
+  const [showBusFactor, setShowBusFactor] = useState(false);
 
   const { data, error, isLoading } = useSWR<TeamStatsResponse>(
     `/api/github/team-stats?owner=${owner}&repo=${repo}&per_page=100`,
@@ -320,8 +334,22 @@ export default function TeamAnalyticsPage() {
     { revalidateOnFocus: false }
   );
 
+  // Phase 2: PR-based contributor leaderboard
+  const { data: contribData, isLoading: contribLoading } = useSWR<RepoContributorsResponse>(
+    `/api/github/repo-contributors?owner=${owner}&repo=${repo}`,
+    fetcher<RepoContributorsResponse>,
+    { revalidateOnFocus: false }
+  );
+
+  // Phase 4: Bus factor per module
+  const { data: busData, isLoading: busLoading } = useSWR<BusFactorResponse>(
+    `/api/github/bus-factor?owner=${owner}&repo=${repo}`,
+    fetcher<BusFactorResponse>,
+    { revalidateOnFocus: false }
+  );
+
   return (
-    <div className="p-8 max-w-6xl space-y-6">
+    <div className="p-8 max-w-7xl space-y-6">
       <RepoWorkflowBreadcrumb owner={owner} repo={repo} />
 
       {/* Header */}
@@ -405,9 +433,131 @@ export default function TeamAnalyticsPage() {
         <>
           <SummaryBar data={data} />
 
+          {/* ── Phase 2: PR Leaderboard ──────────────────────────────────────── */}
+          {contribData && contribData.contributors.length > 0 && (
+            <div className="space-y-4">
+              {/* Bus factor badge */}
+              <div className="flex items-center gap-3 flex-wrap">
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700/50">
+                  <GitPullRequest className="w-3.5 h-3.5 text-violet-400" />
+                  <span className="text-xs text-slate-400">
+                    <span className="text-white font-medium">{contribData.total_prs_analysed}</span> PRs analysed
+                  </span>
+                </div>
+                <div className={cn(
+                  "flex items-center gap-1.5 px-3 py-1.5 rounded-lg border",
+                  contribData.bus_factor <= 1
+                    ? "bg-red-500/10 border-red-500/20"
+                    : contribData.bus_factor <= 2
+                      ? "bg-amber-500/10 border-amber-500/20"
+                      : "bg-green-500/10 border-green-500/20"
+                )}>
+                  <Shield className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="text-xs text-slate-400">
+                    Bus factor:{" "}
+                    <span className={cn(
+                      "font-medium",
+                      contribData.bus_factor <= 1
+                        ? "text-red-400"
+                        : contribData.bus_factor <= 2
+                          ? "text-amber-400"
+                          : "text-green-400"
+                    )}>
+                      {contribData.bus_factor}
+                    </span>
+                  </span>
+                </div>
+              </div>
+
+              {/* Leaderboard toggle */}
+              <div>
+                <button
+                  onClick={() => setShowLeaderboard((v) => !v)}
+                  className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-violet-300 transition-colors"
+                >
+                  <ChevronRight
+                    className={cn("w-3.5 h-3.5 transition-transform", showLeaderboard && "rotate-90")}
+                  />
+                  <BarChart3 className="w-3.5 h-3.5" />
+                  {showLeaderboard ? "Hide" : "Show"} PR Leaderboard ({contribData.contributors.length} contributors)
+                </button>
+                {showLeaderboard && (
+                  <div className="mt-3">
+                    <TeamLeaderboard
+                      contributors={contribData.contributors}
+                      owner={owner}
+                      repo={repo}
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* Reviewer matrix toggle */}
+              {contribData.reviewer_matrix.length > 0 && (
+                <div>
+                  <button
+                    onClick={() => setShowMatrix((v) => !v)}
+                    className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-violet-300 transition-colors"
+                  >
+                    <ChevronRight
+                      className={cn("w-3.5 h-3.5 transition-transform", showMatrix && "rotate-90")}
+                    />
+                    <Grid3X3 className="w-3.5 h-3.5" />
+                    {showMatrix ? "Hide" : "Show"} Reviewer Load Matrix
+                  </button>
+                  {showMatrix && (
+                    <div className="mt-3 rounded-xl border border-slate-800 bg-slate-900/40 p-5">
+                      <h3 className="text-sm font-semibold text-white mb-0.5">Reviewer Load Matrix</h3>
+                      <p className="text-xs text-slate-500 mb-4">Who reviews whose PRs — rows are PR authors, columns are reviewers</p>
+                      <ReviewerLoadMatrix matrix={contribData.reviewer_matrix} />
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {contribLoading && (
+            <div className="rounded-xl border border-slate-700/50 bg-slate-900/40 p-5">
+              <div className="h-4 w-40 rounded skeleton mb-2" />
+              <div className="h-3 w-56 rounded skeleton mb-4" />
+              <div className="h-48 rounded skeleton" />
+            </div>
+          )}
+
+          {/* ── Phase 4: Bus Factor Heatmap ─────────────────────────────────── */}
+          <div>
+            <button
+              onClick={() => setShowBusFactor((v) => !v)}
+              className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-violet-300 transition-colors"
+            >
+              <ChevronRight
+                className={cn("w-3.5 h-3.5 transition-transform", showBusFactor && "rotate-90")}
+              />
+              <FolderTree className="w-3.5 h-3.5" />
+              {showBusFactor ? "Hide" : "Show"} Knowledge & Bus Factor Map
+            </button>
+            {showBusFactor && (
+              <div className="mt-3 rounded-xl border border-slate-800 bg-slate-900/40 p-5">
+                <h3 className="text-sm font-semibold text-white mb-0.5">Knowledge & Bus Factor Map</h3>
+                <p className="text-xs text-slate-500 mb-4">
+                  Per-module contributor concentration — modules with bus factor = 1 are knowledge silos
+                </p>
+                {busLoading && <BusFactorSkeleton />}
+                {busData && <BusFactorHeatmap data={busData} />}
+                {!busLoading && !busData && (
+                  <p className="text-xs text-slate-600 italic py-4 text-center">
+                    Failed to load bus factor data.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* ── CI Contributors (original) ──────────────────────────────────── */}
           <div>
             <h2 className="text-sm font-semibold text-white mb-1">
-              Contributors ({data.contributors.length})
+              CI Contributors ({data.contributors.length})
             </h2>
             <p className="text-xs text-slate-500 mb-4">
               Based on {data.total_runs} completed runs over the last{" "}
