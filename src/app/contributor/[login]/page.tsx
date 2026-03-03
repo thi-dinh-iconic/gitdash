@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
-import Link from "next/link";
 import useSWR from "swr";
 import { fetcher } from "@/lib/swr";
 import { Breadcrumb } from "@/components/Sidebar";
@@ -12,7 +11,7 @@ import { ContributorPrFunnel } from "@/components/ContributorPrFunnel";
 import type { ContributorProfileResponse } from "@/app/api/github/contributor-profile/route";
 import {
   AlertCircle, ExternalLink, MapPin, Building2, ChevronRight,
-  GitPullRequest, Eye, GitCommit, Code, Clock, Moon, Calendar,
+  GitPullRequest, GitCommit, Code, Clock, Moon, Calendar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {

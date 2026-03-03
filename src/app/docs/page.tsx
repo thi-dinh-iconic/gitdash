@@ -5,8 +5,8 @@ import {
   BookOpen, Rocket, Server, Settings2, GitBranch,
   Layers, Shield, HelpCircle, Terminal, ChevronRight,
   Tag, Search, Menu, X, Code2, Users, ChevronDown,
-  ExternalLink, GitPullRequest, Cpu, Lock, Globe,
-  CheckCircle, AlertTriangle, Info,
+  ExternalLink, GitPullRequest, Cpu,
+  CheckCircle,
   Activity, FileText, ShieldAlert, User, DollarSign,
   TrendingUp, Bell, Building2, List, BarChart3, Trophy, Sliders,
 } from "lucide-react";
@@ -1025,7 +1025,7 @@ function FeatureRepoTeam() {
         chips={["CI leaderboard", "Reviewer matrix", "Bus factor"]}
       />
       <ProseP>
-        Three panels that answer "who is doing what?" inside a single repository. The CI leaderboard
+        Three panels that answer &ldquo;who is doing what?&rdquo; inside a single repository. The CI leaderboard
         shows per-actor build stats. The reviewer load matrix reveals review distribution. The bus
         factor heatmap flags knowledge concentration risks.
       </ProseP>
@@ -1086,7 +1086,7 @@ function FeatureContributor() {
         chips={["KPI cards", "52-week heatmap", "PR funnel", "Commit hours", "Languages"]}
       />
       <ProseP>
-        A full "player card" for any GitHub user. Navigate here by clicking a contributor name in the
+        A full &ldquo;player card&rdquo; for any GitHub user. Navigate here by clicking a contributor name in the
         Team Insights leaderboard or Team Stats page. The profile aggregates data from the PR, review,
         and commit APIs for the selected repository context.
       </ProseP>
@@ -1217,9 +1217,9 @@ function FeatureOrg() {
         chips={["Org heatmap", "Repo table", "Health scores"]}
       />
       <ProseP>
-        A bird's-eye view of an entire GitHub organization. The reliability heatmap shows which
+        A bird&apos;s-eye view of an entire GitHub organization. The reliability heatmap shows which
         repositories are red or green at a glance. The sortable repo table includes health scores,
-        run history bars, open PR counts, and quick links to each repo's workflow dashboard.
+        run history bars, open PR counts, and quick links to each repo&apos;s workflow dashboard.
       </ProseP>
       <ScreenshotSlot file="17-org-overview.png" alt="Org Overview page" />
     </section>

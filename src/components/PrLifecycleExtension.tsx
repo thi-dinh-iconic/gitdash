@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import React from "react";
 import {
   BarChart,
   Bar,

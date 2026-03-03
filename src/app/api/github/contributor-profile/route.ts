@@ -143,15 +143,9 @@ export async function GET(req: NextRequest) {
     const reposContributed = new Set<string>();
     let totalCommits = 0;
 
-    // Funnel tracking
-    let funnelOpened = 0;
-    let funnelReviewed = 0;
-    let funnelApproved = 0;
-    let funnelMerged = 0;
-
     for (let i = 0; i < orgRepos.length; i += BATCH_SIZE) {
       const batch = orgRepos.slice(i, i + BATCH_SIZE);
-      const results = await Promise.allSettled(
+      await Promise.allSettled(
         batch.map(async (repo) => {
           const repoFullName = `${owner}/${repo.name}`;
 
@@ -203,8 +197,6 @@ export async function GET(req: NextRequest) {
                 repo_full_name: repoFullName,
               });
 
-              funnelOpened++;
-              if (pr.merged_at) funnelMerged++;
             }
 
             // Fetch reviews given by login on other people's PRs
@@ -246,9 +238,6 @@ export async function GET(req: NextRequest) {
                     repo_full_name: repoFullName,
                   });
 
-                  // Track funnel for PRs where this user was a reviewer
-                  if (review.state === "APPROVED") funnelApproved++;
-                  funnelReviewed++;
                 }
               }
             }
