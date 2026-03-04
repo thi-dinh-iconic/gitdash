@@ -32,6 +32,7 @@ const SEARCH_INDEX: SearchResult[] = [
   { id: "feat-alerts",        title: "Alerts",                  section: "Features", excerpt: "CI and people metric alert rules: failure rate, duration P95, PR throughput drop, review response P90, after-hours commits." },
   { id: "feat-settings",      title: "Settings",                section: "Features", excerpt: "PAT management (standalone), OAuth session info (org mode), GitHub Actions billing widget." },
   { id: "feat-org",           title: "Org Overview",            section: "Features", excerpt: "Organisation reliability heatmap, sortable repo table, health scores, run history." },
+  { id: "metrics-reference",  title: "Metrics Reference",       section: "Reference", excerpt: "DORA 4 Keys, PR Cycle Breakdown, PR Throughput, Workflow Stability, Review P50/P90, Open PR Age, Review Rounds, Bus Factor, CI metrics, Alert metrics." },
   { id: "api-reference",      title: "API Reference",           section: "Reference", excerpt: "REST endpoints: repo-dora, repo-contributors, contributor-profile, bus-factor, security-scan, audit-log, runs, job-stats, db/sync." },
   { id: "faq",                title: "FAQ & Troubleshooting",   section: "Support",  excerpt: "Blank screen, 500 error, cost analytics 404, OAuth state mismatch, DATABASE_URL not working, SESSION_SECRET length, fine-grained PAT." },
   { id: "contributing",       title: "Contributing",            section: "Support",  excerpt: "Development setup, architecture, local environment, npm install, npm run dev, TypeScript, testing." },

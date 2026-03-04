@@ -16,6 +16,7 @@ import {
 import type { OpenPrHealthResponse } from "@/app/api/github/open-pr-health/route";
 import { cn } from "@/lib/utils";
 import { AlertTriangle, Clock, GitPullRequest, XCircle } from "lucide-react";
+import { MetricTooltip } from "@/components/MetricTooltip";
 
 const TOOLTIP_STYLE = {
   contentStyle: {
@@ -30,15 +31,20 @@ const TOOLTIP_STYLE = {
 function SectionCard({
   title,
   subtitle,
+  tooltip,
   children,
 }: {
   title: string;
   subtitle: string;
+  tooltip?: string;
   children: React.ReactNode;
 }) {
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">
-      <h3 className="text-sm font-semibold text-white mb-0.5">{title}</h3>
+      <div className="flex items-center gap-0.5 mb-0.5">
+        <h3 className="text-sm font-semibold text-white">{title}</h3>
+        {tooltip && <MetricTooltip text={tooltip} align="left" />}
+      </div>
       <p className="text-xs text-slate-500 mb-4">{subtitle}</p>
       {children}
     </div>
@@ -372,6 +378,7 @@ export function PrLifecycleExtension({
         <SectionCard
           title="Time to First Review (P50/P90)"
           subtitle="How quickly PRs get reviewed after opening"
+          tooltip="P50 (median) and P90 (90th percentile) of the time between a PR being opened and receiving its first review comment or approval. Also shows Approval→Merge times. High P90 values indicate a long tail of ignored PRs."
         >
           <TimeToFirstReviewChart
             p50={data.time_to_first_review_p50_hours}
@@ -384,6 +391,7 @@ export function PrLifecycleExtension({
         <SectionCard
           title="Open PR Age Distribution"
           subtitle="How long current open PRs have been waiting"
+          tooltip="Buckets currently open PRs by how long they have been open: under 1 day, 1–3 days, 3–7 days, 1–2 weeks, and 2+ weeks. Large bars in the right buckets signal a review bottleneck or abandoned work."
         >
           <PrAgeDistribution distribution={data.age_distribution} />
         </SectionCard>
@@ -391,6 +399,7 @@ export function PrLifecycleExtension({
         <SectionCard
           title="Review Round Distribution"
           subtitle="How many review cycles PRs go through before merge"
+          tooltip="How many back-and-forth review rounds merged PRs went through. A high '3+ rounds' slice may mean unclear requirements, insufficient PR descriptions, or overly strict review standards slowing delivery."
         >
           <ReviewRoundChart distribution={data.review_round_distribution} />
         </SectionCard>
@@ -398,6 +407,7 @@ export function PrLifecycleExtension({
         <SectionCard
           title="Stale & Unreviewed PRs"
           subtitle="Open PRs older than 5 business days without reviews"
+          tooltip="Open PRs that have been waiting more than 5 business days without any review activity. These represent blocked work and directly inflate Review P90 and Pickup Time metrics."
         >
           <StalePrAlerts prs={data.open_prs} />
         </SectionCard>
@@ -408,6 +418,7 @@ export function PrLifecycleExtension({
         <SectionCard
           title="Concurrent Open PRs by Author"
           subtitle="Too many open PRs may indicate context switching or WIP debt"
+          tooltip="Number of currently open PRs per author. Having more than 2–3 open PRs simultaneously suggests context switching, which research links to slower review times and more defects. Yellow ≥ 3, Red ≥ 5."
         >
           <div className="space-y-1.5">
             {data.concurrent_prs_by_author.map((a) => (

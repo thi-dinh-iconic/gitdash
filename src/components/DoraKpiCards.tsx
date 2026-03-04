@@ -4,6 +4,7 @@ import { Rocket, Clock, AlertTriangle, Wrench } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LEVEL_COLORS, LEVEL_LABELS, BENCHMARKS } from "@/lib/dora";
 import type { RepoDoraSummary, DoraLevel } from "@/lib/dora";
+import { MetricTooltip } from "@/components/MetricTooltip";
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 export function DoraKpiSkeleton() {
@@ -58,6 +59,7 @@ type MetricConfig = {
   key: keyof typeof BENCHMARKS;
   title: string;
   subtitle: string;
+  tooltip: string;
   Icon: React.ElementType;
   getLevel: (d: RepoDoraSummary) => DoraLevel;
   getValue: (d: RepoDoraSummary) => string;
@@ -69,6 +71,7 @@ const METRICS: MetricConfig[] = [
     key: "deployment_frequency",
     title: "Deploy Frequency",
     subtitle: "How often code ships",
+    tooltip: "How often the team ships to production. Counted from GitHub Releases (or merged PRs to main when no releases exist). Elite teams deploy multiple times per day.",
     Icon: Rocket,
     getLevel: d => d.deployment_frequency.level,
     getValue: d => d.deployment_frequency.label,
@@ -79,6 +82,7 @@ const METRICS: MetricConfig[] = [
     key: "lead_time",
     title: "Lead Time",
     subtitle: "First commit → merged",
+    tooltip: "Average time from the oldest commit on a PR to when that PR is merged. Measures how quickly code moves through your pipeline. Elite teams achieve under 1 hour.",
     Icon: Clock,
     getLevel: d => d.lead_time.level,
     getValue: d => d.lead_time.label,
@@ -88,6 +92,7 @@ const METRICS: MetricConfig[] = [
     key: "change_failure_rate",
     title: "Change Failure Rate",
     subtitle: "Hotfix / revert PRs",
+    tooltip: "Percentage of changes that caused a production failure, measured as PRs with 'hotfix', 'revert', or 'fix' in the branch name vs. all merged PRs. Elite teams stay below 5%.",
     Icon: AlertTriangle,
     getLevel: d => d.change_failure_rate.level,
     getValue: d => d.change_failure_rate.label,
@@ -98,6 +103,7 @@ const METRICS: MetricConfig[] = [
     key: "mttr",
     title: "Time to Restore",
     subtitle: "Hotfix PR cycle time",
+    tooltip: "How long it takes to recover from a failure — measured as the average time from opening a hotfix or revert PR to merging it. Elite teams restore service in under 1 hour.",
     Icon: Wrench,
     getLevel: d => d.mttr.level,
     getValue: d => d.mttr.label,
@@ -138,7 +144,10 @@ function MetricCard({ metric, data }: { metric: MetricConfig; data: RepoDoraSumm
           <metric.Icon className={cn("w-3.5 h-3.5", c.text)} />
         </div>
         <div>
-          <p className="text-xs font-semibold text-slate-300 leading-tight">{metric.title}</p>
+          <div className="flex items-center">
+            <p className="text-xs font-semibold text-slate-300 leading-tight">{metric.title}</p>
+            <MetricTooltip text={metric.tooltip} align="left" />
+          </div>
           <p className="text-[10px] text-slate-500 leading-tight mt-0.5">{metric.subtitle}</p>
         </div>
       </div>
