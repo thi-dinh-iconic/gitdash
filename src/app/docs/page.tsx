@@ -62,8 +62,16 @@ const NAV: NavSection[] = [
   {
     title: "Reference",
     items: [
-      { id: "metrics-reference", label: "Metrics Reference", icon: BarChart3 },
-      { id: "api-reference",     label: "API Reference",     icon: Code2 },
+      { id: "metrics-reference",      label: "Metrics Reference",   icon: BarChart3 },
+      { id: "metrics-dora",           label: "DORA 4 Keys",         icon: Rocket,      sub: true },
+      { id: "metrics-pr-cycle",       label: "PR Cycle Time",       icon: GitBranch,   sub: true },
+      { id: "metrics-pr-health",      label: "PR Lifecycle Health", icon: Activity,    sub: true },
+      { id: "metrics-workflow",       label: "Workflow Overview",   icon: BarChart3,   sub: true },
+      { id: "metrics-performance",    label: "Performance Tab",     icon: TrendingUp,  sub: true },
+      { id: "metrics-reliability",    label: "Reliability Tab",     icon: Shield,      sub: true },
+      { id: "metrics-team",           label: "Team & People",       icon: Users,       sub: true },
+      { id: "metrics-ci-alerts",      label: "CI & Alert Metrics",  icon: Bell,        sub: true },
+      { id: "api-reference",          label: "API Reference",       icon: Code2 },
     ],
   },
   {
@@ -1230,20 +1238,58 @@ function FeatureOrg() {
 // ─────────────────────────────────────────────────────────────────────────────
 // ── Metrics Reference ─────────────────────────────────────────────────────────
 
-function MetricsReference() {
+function MetricsReference({ onNavigate }: { onNavigate?: (id: string) => void }) {
+  const PAGES = [
+    { id: "metrics-dora",        icon: Rocket,     label: "DORA 4 Keys",         desc: "Deploy Frequency, Lead Time, Change Failure Rate, MTTR — the industry standard delivery benchmarks." },
+    { id: "metrics-pr-cycle",    icon: GitBranch,  label: "PR Cycle Time",        desc: "The four phases of a PR's life: Time to Open, Pickup Time, Review Time, and Merge Time." },
+    { id: "metrics-pr-health",   icon: Activity,   label: "PR Lifecycle Health",  desc: "Open PRs, Review P50/P90, Abandon Rate, Age Distribution, and concurrent WIP per author." },
+    { id: "metrics-workflow",    icon: BarChart3,  label: "Workflow Overview",    desc: "Rolling Success Rate, Duration Trend, Outcome Breakdown, Run Frequency, and Optimization Tips." },
+    { id: "metrics-performance", icon: TrendingUp, label: "Performance Tab",      desc: "Job Duration avg vs p95, Job Composition per Run, and Slowest Steps rankings." },
+    { id: "metrics-reliability", icon: Shield,     label: "Reliability Tab",      desc: "MTTR, Failure Streak, Flaky Branches, Re-run Rate, Pass/Fail Timeline, and Anomaly Detection." },
+    { id: "metrics-team",        icon: Users,      label: "Team & People",        desc: "Leaderboard columns, Reviewer Load Matrix, and Bus Factor (HHI) explained." },
+    { id: "metrics-ci-alerts",   icon: Bell,       label: "CI & Alert Metrics",   desc: "CI Workflow metrics, CI-based DORA calculations, and Alert rule trigger conditions." },
+  ];
+
   return (
     <section className="space-y-8">
       <SectionHeading id="metrics-reference" icon={BarChart3}>Metrics Reference</SectionHeading>
-
       <ProseP>
         Every number GitDash displays is defined here — what it measures, how it is calculated, and
         what a good value looks like. Hover the <Code>?</Code> icon next to any metric in the app
-        for a quick reminder.
+        for a quick reminder. Select a category below to dive in.
       </ProseP>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {PAGES.map((p) => {
+          const Icon = p.icon;
+          return (
+            <button
+              key={p.id}
+              onClick={() => onNavigate?.(p.id)}
+              className="group text-left rounded-xl border border-slate-800 bg-slate-900/40 p-5 hover:border-violet-500/40 hover:bg-slate-800/60 transition-all"
+            >
+              <div className="flex items-center gap-3 mb-2">
+                <span className="p-2 rounded-lg bg-violet-500/10 text-violet-400">
+                  <Icon className="w-4 h-4" />
+                </span>
+                <span className="text-sm font-semibold text-white group-hover:text-violet-300 transition-colors">{p.label}</span>
+              </div>
+              <p className="text-xs text-slate-400 leading-relaxed">{p.desc}</p>
+            </button>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
 
-      {/* ── DORA 4 Keys ──────────────────────────────────────────────────── */}
+// ── Metrics sub-pages ─────────────────────────────────────────────────────────
+
+function MetricsDora() {
+  return (
+    <section className="space-y-8">
+      <SectionHeading id="metrics-dora" icon={Rocket}>DORA 4 Keys</SectionHeading>
       <DocCard>
-        <SubHeading>DORA 4 Keys</SubHeading>
+        <SubHeading>Repo-level DORA</SubHeading>
         <ProseP>
           The four metrics from the DORA (DevOps Research and Assessment) research programme.
           They measure the speed and stability of software delivery.
@@ -1252,281 +1298,112 @@ function MetricsReference() {
         <DocTable
           headers={["Metric", "What it measures", "How it is calculated", "DORA levels"]}
           rows={[
-            [
-              "Deploy Frequency",
-              "How often the team ships to production",
-              "Count of GitHub Releases in the last 30 days, divided by 30. Falls back to merged PRs to main when no releases exist.",
-              "Elite: >1/day · High: >1/week · Medium: >1/month · Low: <1/month",
-            ],
-            [
-              "Lead Time for Changes",
-              "Time from writing code to it being in production",
-              "Median time from the oldest commit on a PR to that PR being merged. Computed over the last 60 merged PRs.",
-              "Elite: <1h · High: <1d · Medium: <1wk · Low: ≥1wk",
-            ],
-            [
-              "Change Failure Rate",
-              "How often a deployment causes a production failure",
-              "PRs whose branch name contains 'hotfix', 'revert', or 'fix' as a percentage of all merged PRs in the last 90 days.",
-              "Elite: <5% · High: <10% · Medium: <15% · Low: ≥15%",
-            ],
-            [
-              "Time to Restore (MTTR)",
-              "How quickly the team recovers from a production failure",
-              "Average cycle time (open → merged) of hotfix/revert PRs identified in the Change Failure Rate calculation.",
-              "Elite: <1h · High: <1d · Medium: <1wk · Low: ≥1wk",
-            ],
+            ["Deploy Frequency", "How often the team ships to production", "Count of GitHub Releases in the last 30 days, divided by 30. Falls back to merged PRs to main when no releases exist.", "Elite: >1/day · High: >1/week · Medium: >1/month · Low: <1/month"],
+            ["Lead Time for Changes", "Time from writing code to it being in production", "Median time from the oldest commit on a PR to that PR being merged. Computed over the last 60 merged PRs.", "Elite: <1h · High: <1d · Medium: <1wk · Low: ≥1wk"],
+            ["Change Failure Rate", "How often a deployment causes a production failure", "PRs whose branch name contains 'hotfix', 'revert', or 'fix' as a percentage of all merged PRs in the last 90 days.", "Elite: <5% · High: <10% · Medium: <15% · Low: ≥15%"],
+            ["Time to Restore (MTTR)", "How quickly the team recovers from a production failure", "Average cycle time (open → merged) of hotfix/revert PRs identified in the Change Failure Rate calculation.", "Elite: <1h · High: <1d · Medium: <1wk · Low: ≥1wk"],
           ]}
         />
       </DocCard>
-
-      {/* ── PR Cycle Breakdown ───────────────────────────────────────────── */}
       <DocCard>
-        <SubHeading>PR Cycle Time Breakdown</SubHeading>
-        <ProseP>
-          Lead Time is split into four sequential phases. Each phase reveals a different bottleneck.
-          The proportional bar on the repo overview page shows how much of total lead time each phase consumes.
-        </ProseP>
-        <DocTable
-          headers={["Phase", "Start → End", "What a long value means"]}
-          rows={[
-            [
-              "Time to Open",
-              "Oldest commit on the branch → PR created",
-              "Developers are sitting on local branches too long before opening a PR. Encourages smaller, more frequent PRs.",
-            ],
-            [
-              "Pickup Time",
-              "PR created → first review comment or approval",
-              "Reviewers are slow to start. May indicate too many concurrent open PRs, unclear ownership, or team capacity issues.",
-            ],
-            [
-              "Review Time",
-              "First review → PR approved",
-              "Reviews require many back-and-forth cycles. May indicate large/complex PRs, unclear requirements, or strict standards.",
-            ],
-            [
-              "Merge Time",
-              "PR approved → merged",
-              "CI is slow, there is a merge queue backlog, or developers do not merge promptly after approval.",
-            ],
-          ]}
-        />
-      </DocCard>
-
-      {/* ── PR Health Metrics ────────────────────────────────────────────── */}
-      <DocCard>
-        <SubHeading>PR Lifecycle Health</SubHeading>
-        <ProseP>
-          These metrics describe the health of currently open and recently closed PRs.
-          They appear in the PR lifecycle analytics panel on the repository overview page.
-        </ProseP>
-        <DocTable
-          headers={["Metric", "Definition", "Target range"]}
-          rows={[
-            [
-              "Open PRs",
-              "Number of pull requests currently in an open state in the repository.",
-              "Depends on team size; watch for a growing trend over time.",
-            ],
-            [
-              "Review P50 (Median)",
-              "The median time between a PR being opened and receiving its first review. Half of PRs are reviewed faster than this value.",
-              "< 4 hours for active repos",
-            ],
-            [
-              "Review P90",
-              "The 90th-percentile time to first review. 90% of PRs are reviewed within this time. A high gap between P50 and P90 indicates a long tail of ignored PRs.",
-              "< 1 day",
-            ],
-            [
-              "Approval → Merge P50/P90",
-              "Time between a PR receiving final approval and being merged. Measures how quickly approved work is landed.",
-              "< 2 hours",
-            ],
-            [
-              "Open PR Age Distribution",
-              "Currently open PRs bucketed by age: <1d, 1–3d, 3–7d, 1–2wk, 2+wk. Large buckets on the right indicate blocked or abandoned work.",
-              "Most PRs should be < 3 days old.",
-            ],
-            [
-              "Review Round Distribution",
-              "How many review cycles (request → response) merged PRs went through. 0 rounds = merged without review. 3+ rounds = heavy back-and-forth.",
-              "1–2 rounds is healthy. >3 rounds may indicate unclear specs or large PRs.",
-            ],
-            [
-              "Stale & Unreviewed PRs",
-              "Open PRs older than 5 business days that have received no review activity. These directly inflate Review P90 and Pickup Time.",
-              "0 stale PRs is the target.",
-            ],
-            [
-              "Concurrent Open PRs by Author",
-              "Number of open PRs per developer right now. High WIP per person is correlated with context switching, slower reviews, and more defects.",
-              "≤ 2 per author is healthy. ≥ 5 is flagged red.",
-            ],
-          ]}
-        />
-      </DocCard>
-
-      {/* ── Throughput & Velocity ────────────────────────────────────────── */}
-      <DocCard>
-        <SubHeading>Throughput & Velocity</SubHeading>
+        <SubHeading>Throughput &amp; Velocity</SubHeading>
         <DocTable
           headers={["Metric", "Definition", "Why it matters"]}
           rows={[
-            [
-              "PR Throughput",
-              "Number of PRs merged to the default branch per calendar week, shown over the last 12 weeks.",
-              "A proxy for delivery frequency. Sudden drops highlight blocked sprints, holidays, or process changes.",
-            ],
-            [
-              "PR Size vs. Merge Velocity",
-              "Scatter plot: each dot is a merged PR. X-axis = lines changed (additions + deletions). Y-axis = hours from PR open to merge. The trend line shows the relationship.",
-              "Confirms that smaller PRs merge faster. Share this chart with teams to motivate smaller, more frequent changes.",
-            ],
-            [
-              "Workflow Stability",
-              "Daily pass rate of CI runs on the default branch over 30 days. Plotted as a line chart with Elite (95%) and High (80%) reference lines.",
-              "A persistently failing main branch directly increases Change Failure Rate and slows down all PRs waiting for a green build.",
-            ],
+            ["PR Throughput", "Number of PRs merged to the default branch per calendar week, shown over the last 12 weeks.", "A proxy for delivery frequency. Sudden drops highlight blocked sprints, holidays, or process changes."],
+            ["PR Size vs. Merge Velocity", "Scatter plot: each dot is a merged PR. X-axis = lines changed (additions + deletions). Y-axis = hours from PR open to merge. The trend line shows the relationship.", "Confirms that smaller PRs merge faster. Share this chart with teams to motivate smaller, more frequent changes."],
+            ["Workflow Stability", "Daily pass rate of CI runs on the default branch over 30 days. Plotted as a line chart with Elite (95%) and High (80%) reference lines.", "A persistently failing main branch directly increases Change Failure Rate and slows down all PRs waiting for a green build."],
           ]}
         />
       </DocCard>
+    </section>
+  );
+}
 
-      {/* ── Team & People Metrics ────────────────────────────────────────── */}
+function MetricsPrCycle() {
+  return (
+    <section className="space-y-8">
+      <SectionHeading id="metrics-pr-cycle" icon={GitBranch}>PR Cycle Time Breakdown</SectionHeading>
+      <ProseP>
+        Lead Time is split into four sequential phases. Each phase reveals a different bottleneck.
+        The proportional bar on the repo overview page shows how much of total lead time each phase consumes.
+      </ProseP>
       <DocCard>
-        <SubHeading>Team &amp; People Metrics</SubHeading>
-        <ProseP>
-          These metrics appear in the Team Insights leaderboard and Contributor Profile pages.
-          They focus on individual delivery patterns rather than repository-level aggregates.
-        </ProseP>
         <DocTable
-          headers={["Column", "Calculation", "What to look for"]}
+          headers={["Phase", "Start → End", "What a long value means"]}
           rows={[
-            [
-              "PRs Merged",
-              "Count of PRs authored by this person that were merged to the default branch in the last 90 days.",
-              "Baseline throughput indicator. Low counts combined with high WIP may signal blockers.",
-            ],
-            [
-              "Reviews Given",
-              "Count of PR reviews submitted by this person in the last 90 days (all states: approved, changes requested, commented).",
-              "Identifies reviewers who carry a disproportionate load, and those who rarely review.",
-            ],
-            [
-              "Avg Lead Time",
-              "Average time from the first commit on each PR to merge, across all PRs this person authored.",
-              "Compare against team median. High individual lead time may mean large PRs or slow code review.",
-            ],
-            [
-              "Avg PR Size",
-              "Average lines changed (additions + deletions) per merged PR.",
-              "Smaller is usually better. Large average sizes increase review time and defect risk.",
-            ],
-            [
-              "Review Response",
-              "Median time between a PR being opened and this person submitting their first review on that PR.",
-              "High values indicate a slow reviewer or reviewer overload.",
-            ],
-            [
-              "First-Pass Approval Rate",
-              "Percentage of PRs this person authored that were approved on the first review round (no changes-requested cycle).",
-              "High rates indicate clear PR descriptions and well-scoped changes.",
-            ],
-            [
-              "Self-Merges",
-              "PRs the author merged themselves without any other approver.",
-              "Occasional self-merges are fine (hotfixes). A high rate may indicate a lack of code review culture.",
-            ],
-            [
-              "After-Hours Commits %",
-              "Percentage of commits made outside 09:00–18:00 UTC. Visible in the commit hour distribution chart on the contributor profile.",
-              "A proxy for burnout risk. A sustained high rate warrants a conversation about workload.",
-            ],
+            ["Time to Open", "Oldest commit on the branch → PR created", "Developers are sitting on local branches too long before opening a PR. Encourages smaller, more frequent PRs."],
+            ["Pickup Time", "PR created → first review comment or approval", "Reviewers are slow to start. May indicate too many concurrent open PRs, unclear ownership, or team capacity issues."],
+            ["Review Time", "First review → PR approved", "Reviews require many back-and-forth cycles. May indicate large/complex PRs, unclear requirements, or strict standards."],
+            ["Merge Time", "PR approved → merged", "CI is slow, there is a merge queue backlog, or developers do not merge promptly after approval."],
           ]}
         />
       </DocCard>
+      <Callout type="info">
+        The stacked bar on the Repo Overview page colours each phase proportionally.
+        Hover any segment to see its raw duration and percentage of total lead time.
+      </Callout>
+    </section>
+  );
+}
 
-      {/* ── Reviewer Load Matrix ─────────────────────────────────────────── */}
+function MetricsPrHealth() {
+  return (
+    <section className="space-y-8">
+      <SectionHeading id="metrics-pr-health" icon={Activity}>PR Lifecycle Health</SectionHeading>
+      <ProseP>
+        These metrics describe the health of currently open and recently closed PRs.
+        They appear in the PR lifecycle analytics panel on the repository overview page.
+      </ProseP>
       <DocCard>
-        <SubHeading>Reviewer Load Matrix</SubHeading>
-        <ProseP>
-          A heatmap where rows are PR authors and columns are reviewers.
-          Each cell shows how many of that author&apos;s PRs were reviewed by that reviewer.
-          Dark cells indicate a concentrated review relationship.
-        </ProseP>
+        <SubHeading>KPI Cards</SubHeading>
         <DocTable
-          headers={["Signal", "Meaning"]}
+          headers={["Metric", "Definition", "Target range"]}
           rows={[
-            ["One reviewer in nearly every row", "Single-point-of-failure reviewer — a bottleneck and a bus-factor risk."],
-            ["One author never reviewed by anyone", "Possible self-merge pattern or team isolation — worth investigating."],
-            ["Balanced matrix (many medium-shade cells)", "Healthy cross-reviewing culture with distributed knowledge."],
+            ["Open PRs", "Number of pull requests currently in an open state in the repository.", "Depends on team size; watch for a growing trend over time."],
+            ["Review P50 (Median)", "The median time between a PR being opened and receiving its first review. Half of PRs are reviewed faster than this value.", "< 4 hours for active repos"],
+            ["Review P90", "The 90th-percentile time to first review. 90% of PRs are reviewed within this time. A high gap between P50 and P90 indicates a long tail of ignored PRs.", "< 1 day"],
+            ["Abandon Rate", "Percentage of recently closed PRs that were closed without being merged. High rates may indicate PRs opened prematurely, review gatekeeping, or code that was abandoned.", "< 10%"],
+            ["Concurrent Open PRs by Author", "Number of open PRs per developer right now. High WIP per person is correlated with context switching, slower reviews, and more defects.", "≤ 2 per author is healthy. ≥ 5 is flagged red."],
           ]}
         />
       </DocCard>
-
-      {/* ── Bus Factor ───────────────────────────────────────────────────── */}
       <DocCard>
-        <SubHeading>Bus Factor</SubHeading>
-        <ProseP>
-          The bus factor of a module is the minimum number of team members whose absence would
-          severely impact the project. GitDash approximates it per file-path prefix using the
-          Herfindahl–Hirschman Index (HHI) on commit authorship.
-        </ProseP>
+        <SubHeading>Charts &amp; Distributions</SubHeading>
         <DocTable
-          headers={["Term", "Definition"]}
+          headers={["Chart", "Definition", "Target"]}
           rows={[
-            [
-              "HHI (Herfindahl Index)",
-              "Sum of squared contribution shares for a module. HHI = 1 means one person owns 100% of commits. HHI = 0.25 means four equal contributors — safer.",
-            ],
-            [
-              "Active contributors",
-              "Authors with at least one commit to that module in the last 90 days.",
-            ],
-            [
-              "Risk threshold",
-              "Modules with fewer than 2 active contributors are flagged. Loss of the single contributor would leave the module unmaintained.",
-            ],
+            ["Approval → Merge P50/P90", "Time between a PR receiving final approval and being merged. Measures how quickly approved work is landed.", "< 2 hours"],
+            ["Open PR Age Distribution", "Currently open PRs bucketed by age: <1d, 1–3d, 3–7d, 1–2wk, 2+wk. Large buckets on the right indicate blocked or abandoned work.", "Most PRs should be < 3 days old."],
+            ["Review Round Distribution", "How many review cycles (request → response) merged PRs went through. 0 rounds = merged without review. 3+ rounds = heavy back-and-forth.", "1–2 rounds is healthy. >3 rounds may indicate unclear specs or large PRs."],
+            ["Stale & Unreviewed PRs", "Open PRs older than 5 business days that have received no review activity. These directly inflate Review P90 and Pickup Time.", "0 stale PRs is the target."],
           ]}
         />
       </DocCard>
+    </section>
+  );
+}
 
-      {/* ── Workflow Overview Metrics ────────────────────────────────────── */}
+function MetricsWorkflow() {
+  return (
+    <section className="space-y-8">
+      <SectionHeading id="metrics-workflow" icon={BarChart3}>Workflow Overview Tab</SectionHeading>
+      <ProseP>
+        The Overview tab of the Workflow Detail page shows four charts that give a quick health pulse
+        for a specific GitHub Actions workflow, plus an Optimization Tips banner.
+      </ProseP>
       <DocCard>
-        <SubHeading>Workflow Overview Tab</SubHeading>
-        <ProseP>
-          The Overview tab of the Workflow Detail page shows four charts that give a quick health pulse
-          for a specific GitHub Actions workflow.
-        </ProseP>
+        <SubHeading>Overview Charts</SubHeading>
         <DocTable
           headers={["Chart", "What it shows", "How to read it"]}
           rows={[
-            [
-              "Rolling Success Rate",
-              "Moving average of CI pass rate over every 7 consecutive runs.",
-              "A dip below the red 80% reference line that persists across multiple windows indicates a systemic problem, not just a fluke failure.",
-            ],
-            [
-              "Duration Trend",
-              "Two overlaid area series: purple = total run time (minutes), amber = queue wait time (minutes), plotted for the last 60 runs.",
-              "Rising purple = the workflow itself is getting slower (test suite growth, cache misses). Rising amber = runner capacity is the bottleneck.",
-            ],
-            [
-              "Outcome Breakdown",
-              "Donut chart of run conclusions over the last 60 runs: success, failure, cancelled, skipped, timed_out.",
-              "A large failure or timed_out slice needs immediate attention. Cancelled runs often indicate force-pushes interrupting in-flight runs.",
-            ],
-            [
-              "Run Frequency",
-              "Bar chart of runs triggered per calendar day over the last 14 days.",
-              "Gaps are expected on holidays. Unusual spikes may indicate retry storms, misconfigured cron schedules, or a flood of PRs.",
-            ],
+            ["Rolling Success Rate", "Moving average of CI pass rate over every 7 consecutive runs.", "A dip below the red 80% reference line that persists across multiple windows indicates a systemic problem, not just a fluke failure."],
+            ["Action Duration Trend", "Two overlaid area series: purple = total run time (minutes), amber = queue wait time (minutes), plotted for the last 60 runs.", "Rising purple = the workflow itself is getting slower (test suite growth, cache misses). Rising amber = runner capacity is the bottleneck."],
+            ["Outcome Breakdown", "Donut chart of run conclusions over the last 60 runs: success, failure, cancelled, skipped, timed_out.", "A large failure or timed_out slice needs immediate attention. Cancelled runs often indicate force-pushes interrupting in-flight runs."],
+            ["Run Frequency", "Bar chart of runs triggered per calendar day over the last 14 days.", "Gaps are expected on holidays. Unusual spikes may indicate retry storms, misconfigured cron schedules, or a flood of PRs."],
           ]}
         />
       </DocCard>
-
-      {/* ── Optimization Tips ────────────────────────────────────────────── */}
       <DocCard>
         <SubHeading>Optimization Tips</SubHeading>
         <ProseP>
@@ -1544,8 +1421,181 @@ function MetricsReference() {
           ]}
         />
       </DocCard>
+    </section>
+  );
+}
 
-      {/* ── CI-based DORA (DORA tab) ─────────────────────────────────────── */}
+function MetricsPerformance() {
+  return (
+    <section className="space-y-8">
+      <SectionHeading id="metrics-performance" icon={TrendingUp}>Performance Tab</SectionHeading>
+      <ProseP>
+        The Performance tab of the Workflow Detail page breaks down where time is spent across
+        jobs and individual steps, helping you identify the highest-impact optimization targets.
+      </ProseP>
+      <DocCard>
+        <SubHeading>Job Duration</SubHeading>
+        <ProseP>
+          A horizontal bar chart showing each job&apos;s <strong>average duration</strong> (purple) vs
+          its <strong>p95 duration</strong> (blue), displayed in minutes. The gap between
+          average and p95 is the &ldquo;tail latency&rdquo; — a large gap means some runs of that
+          job are dramatically slower than usual.
+        </ProseP>
+        <DocTable
+          headers={["Column / Series", "Definition"]}
+          rows={[
+            ["Avg", "Mean duration of that job across all loaded runs."],
+            ["p95", "95th-percentile duration — 95% of runs of that job finish within this time. A rising p95 is a stronger signal of regression than a rising average."],
+            ["Gap (avg → p95)", "Large gaps indicate non-deterministic jobs: slow on some runs, fast on others. Common causes: cache misses, test flakiness, or shared infrastructure contention."],
+          ]}
+        />
+      </DocCard>
+      <DocCard>
+        <SubHeading>Job Composition per Run</SubHeading>
+        <ProseP>
+          A stacked bar chart showing the last 20 runs on the X-axis and total run duration on the
+          Y-axis. Each bar is segmented by job, colour-coded consistently. This reveals which job
+          dominates total run time and whether that share is growing.
+        </ProseP>
+        <Callout type="info">
+          Hover any segment to see the exact job name and its duration for that run.
+          A sudden change in a job&apos;s share often corresponds to a code change in that job&apos;s steps.
+        </Callout>
+      </DocCard>
+      <DocCard>
+        <SubHeading>Slowest Steps</SubHeading>
+        <ProseP>
+          A ranked table of the top 10 individual <strong>step names</strong> by average runtime,
+          aggregated across all jobs and loaded runs. Each row shows: step name, job context,
+          run count, average, p95, max durations, and success %.
+        </ProseP>
+        <DocTable
+          headers={["Column", "What it means"]}
+          rows={[
+            ["RUNS", "Number of runs in which this step executed (denominator for averages)."],
+            ["AVG", "Mean step duration in seconds across all runs."],
+            ["P95", "95th-percentile step duration. Use this to size timeouts and SLOs."],
+            ["MAX", "Worst observed duration for this step — a ceiling for worst-case pipeline time."],
+            ["SUCCESS %", "Percentage of step executions that completed successfully. Low values indicate a flaky step."],
+          ]}
+        />
+      </DocCard>
+    </section>
+  );
+}
+
+function MetricsReliability() {
+  return (
+    <section className="space-y-8">
+      <SectionHeading id="metrics-reliability" icon={Shield}>Reliability Tab</SectionHeading>
+      <ProseP>
+        The Reliability tab surfaces failure patterns, recovery speed, and non-deterministic
+        behaviour in your CI workflows.
+      </ProseP>
+      <DocCard>
+        <SubHeading>KPI Cards</SubHeading>
+        <DocTable
+          headers={["Metric", "Definition", "Target"]}
+          rows={[
+            ["MTTR", "Mean Time To Recovery — the average time between a failing run and the next successful run on the same branch. Measures how quickly the team resolves CI breakages.", "< 1 hour (DORA Elite)"],
+            ["Failure Streak", "Number of consecutive failed runs on the default branch with no successful run in between. Any streak ≥ 3 is flagged red.", "0 — any streak warrants immediate attention."],
+            ["Flaky Branches", "Number of branches where the last 10 runs alternated between success and failure (flip-flop pattern). Indicates non-deterministic tests or environment instability.", "0 flaky branches"],
+            ["Re-run Rate", "Percentage of runs that were manually re-triggered (run_attempt > 1). A high rate is a strong signal of flaky tests or infrastructure instability.", "< 5%"],
+          ]}
+        />
+      </DocCard>
+      <DocCard>
+        <SubHeading>Charts</SubHeading>
+        <DocTable
+          headers={["Chart", "What it shows", "How to read it"]}
+          rows={[
+            ["Pass / Fail Timeline", "Bar chart of run outcomes ordered chronologically. Green bars = success (+1), red bars = failure (−1).", "Clusters of red reveal outage duration and frequency. Hover a bar to see the run number and conclusion."],
+            ["Flaky Branches", "Badge list of branches that exhibited flip-flop outcomes in the last 10 runs.", "Any branch listed here has non-deterministic CI. Investigate and quarantine unstable tests."],
+            ["Anomaly Detection", "Runs whose duration deviated more than 2 standard deviations from a rolling 10-run baseline.", "Classified as moderate (2–3 stddev) or extreme (> 3 stddev). Investigate for stuck jobs, infrastructure issues, or abnormally large changesets."],
+          ]}
+        />
+      </DocCard>
+      <DocCard>
+        <SubHeading>CI / Workflow Metrics</SubHeading>
+        <DocTable
+          headers={["Metric", "Definition", "Good range"]}
+          rows={[
+            ["Success Rate", "Percentage of completed workflow runs that finished with conclusion = success over the selected window.", "> 90%"],
+            ["Duration P95", "The 95th-percentile run duration. 95% of runs complete faster than this value. A rising P95 indicates flaky or slow test suites.", "Depends on workflow type; watch for upward trend."],
+            ["Queue Wait P95", "The 95th-percentile time between a run being triggered and its first job actually starting. High values indicate runner capacity constraints.", "< 2 minutes for self-hosted; < 5 min for GitHub-hosted."],
+            ["Avg Queue Wait", "Mean runner wait time across all runs. This is pure infrastructure overhead — not code or test execution time.", "< 1 minute ideally."],
+          ]}
+        />
+      </DocCard>
+    </section>
+  );
+}
+
+function MetricsTeam() {
+  return (
+    <section className="space-y-8">
+      <SectionHeading id="metrics-team" icon={Users}>Team &amp; People Metrics</SectionHeading>
+      <ProseP>
+        These metrics appear in the Team Insights leaderboard and Contributor Profile pages.
+        They focus on individual delivery patterns rather than repository-level aggregates.
+      </ProseP>
+      <DocCard>
+        <SubHeading>Team Leaderboard Columns</SubHeading>
+        <DocTable
+          headers={["Column", "Calculation", "What to look for"]}
+          rows={[
+            ["PRs Merged", "Count of PRs authored by this person that were merged to the default branch in the last 90 days.", "Baseline throughput indicator. Low counts combined with high WIP may signal blockers."],
+            ["Reviews Given", "Count of PR reviews submitted by this person in the last 90 days (all states: approved, changes requested, commented).", "Identifies reviewers who carry a disproportionate load, and those who rarely review."],
+            ["Avg Lead Time", "Average time from the first commit on each PR to merge, across all PRs this person authored.", "Compare against team median. High individual lead time may mean large PRs or slow code review."],
+            ["Avg PR Size", "Average lines changed (additions + deletions) per merged PR.", "Smaller is usually better. Large average sizes increase review time and defect risk."],
+            ["Review Response", "Median time between a PR being opened and this person submitting their first review on that PR.", "High values indicate a slow reviewer or reviewer overload."],
+            ["First-Pass Approval Rate", "Percentage of PRs this person authored that were approved on the first review round (no changes-requested cycle).", "High rates indicate clear PR descriptions and well-scoped changes."],
+            ["Self-Merges", "PRs the author merged themselves without any other approver.", "Occasional self-merges are fine (hotfixes). A high rate may indicate a lack of code review culture."],
+            ["After-Hours Commits %", "Percentage of commits made outside 09:00–18:00 UTC. Visible in the commit hour distribution chart on the contributor profile.", "A proxy for burnout risk. A sustained high rate warrants a conversation about workload."],
+          ]}
+        />
+      </DocCard>
+      <DocCard>
+        <SubHeading>Reviewer Load Matrix</SubHeading>
+        <ProseP>
+          A heatmap where rows are PR authors and columns are reviewers.
+          Each cell shows how many of that author&apos;s PRs were reviewed by that reviewer.
+          Dark cells indicate a concentrated review relationship.
+        </ProseP>
+        <DocTable
+          headers={["Signal", "Meaning"]}
+          rows={[
+            ["One reviewer in nearly every row", "Single-point-of-failure reviewer — a bottleneck and a bus-factor risk."],
+            ["One author never reviewed by anyone", "Possible self-merge pattern or team isolation — worth investigating."],
+            ["Balanced matrix (many medium-shade cells)", "Healthy cross-reviewing culture with distributed knowledge."],
+          ]}
+        />
+      </DocCard>
+      <DocCard>
+        <SubHeading>Bus Factor</SubHeading>
+        <ProseP>
+          The bus factor of a module is the minimum number of team members whose absence would
+          severely impact the project. GitDash approximates it per file-path prefix using the
+          Herfindahl–Hirschman Index (HHI) on commit authorship.
+        </ProseP>
+        <DocTable
+          headers={["Term", "Definition"]}
+          rows={[
+            ["HHI (Herfindahl Index)", "Sum of squared contribution shares for a module. HHI = 1 means one person owns 100% of commits. HHI = 0.25 means four equal contributors — safer."],
+            ["Active contributors", "Authors with at least one commit to that module in the last 90 days."],
+            ["Risk threshold", "Modules with fewer than 2 active contributors are flagged. Loss of the single contributor would leave the module unmaintained."],
+          ]}
+        />
+      </DocCard>
+    </section>
+  );
+}
+
+function MetricsCiAlerts() {
+  return (
+    <section className="space-y-8">
+      <SectionHeading id="metrics-ci-alerts" icon={Bell}>CI &amp; Alert Metrics</SectionHeading>
+
       <DocCard>
         <SubHeading>CI-based DORA (Workflow DORA Tab)</SubHeading>
         <Callout type="info">
@@ -1556,26 +1606,10 @@ function MetricsReference() {
         <DocTable
           headers={["Metric", "CI-based calculation", "Difference from repo-level DORA"]}
           rows={[
-            [
-              "Deploy Frequency",
-              "Successful runs on the default branch per day over the last 30 days.",
-              "Repo-level uses Releases or merged PRs. CI-based counts every successful workflow run — useful for workflows that deploy on every merge.",
-            ],
-            [
-              "Lead Time",
-              "Average time from the triggering commit timestamp to the run completing successfully.",
-              "Repo-level measures first commit → PR merged. CI-based measures commit → CI green — does not include PR review time.",
-            ],
-            [
-              "Change Failure Rate",
-              "Percentage of default-branch runs that failed (not cancelled/skipped).",
-              "Repo-level uses hotfix/revert PR heuristics. CI-based is a direct CI failure rate — more precise but only reflects build failures, not production incidents.",
-            ],
-            [
-              "MTTR",
-              "Average time from a failed run to the next successful run on the same branch.",
-              "Repo-level uses hotfix PR cycle time. CI-based measures build recovery time — does not account for manual intervention or rollbacks.",
-            ],
+            ["Deploy Frequency", "Successful runs on the default branch per day over the last 30 days.", "Repo-level uses Releases or merged PRs. CI-based counts every successful workflow run — useful for workflows that deploy on every merge."],
+            ["Lead Time", "Average time from the triggering commit timestamp to the run completing successfully.", "Repo-level measures first commit → PR merged. CI-based measures commit → CI green — does not include PR review time."],
+            ["Change Failure Rate", "Percentage of default-branch runs that failed (not cancelled/skipped).", "Repo-level uses hotfix/revert PR heuristics. CI-based is a direct CI failure rate — more precise but only reflects build failures, not production incidents."],
+            ["MTTR", "Average time from a failed run to the next successful run on the same branch.", "Repo-level uses hotfix PR cycle time. CI-based measures build recovery time — does not account for manual intervention or rollbacks."],
           ]}
         />
         <ProseP>
@@ -1584,46 +1618,6 @@ function MetricsReference() {
         </ProseP>
       </DocCard>
 
-      {/* ── CI Workflow Metrics ──────────────────────────────────────────── */}
-      <DocCard>
-        <SubHeading>CI / Workflow Metrics</SubHeading>
-        <ProseP>
-          These metrics come from GitHub Actions workflow run data and appear in the Workflow Detail page
-          and the CI-based DORA section.
-        </ProseP>
-        <DocTable
-          headers={["Metric", "Definition", "Good range"]}
-          rows={[
-            [
-              "Success Rate",
-              "Percentage of completed workflow runs that finished with conclusion = success over the selected window.",
-              "> 90%",
-            ],
-            [
-              "Duration P95",
-              "The 95th-percentile run duration. 95% of runs complete faster than this value. A rising P95 indicates flaky or slow test suites.",
-              "Depends on workflow type; watch for upward trend.",
-            ],
-            [
-              "Queue Wait P95",
-              "The 95th-percentile time between a run being triggered and its first job actually starting. High values indicate runner capacity constraints.",
-              "< 2 minutes for self-hosted; < 5 min for GitHub-hosted.",
-            ],
-            [
-              "Failure Streak",
-              "Number of consecutive failed runs on the default branch without a successful run in between. A streak > 3 often means a broken main branch.",
-              "0 — any streak warrants immediate attention.",
-            ],
-            [
-              "Re-run Rate",
-              "Percentage of runs that were manually re-triggered (run_attempt > 1). High rates indicate flaky tests or infrastructure instability.",
-              "< 5%",
-            ],
-          ]}
-        />
-      </DocCard>
-
-      {/* ── Alert Metric Reference ───────────────────────────────────────── */}
       <DocCard>
         <SubHeading>Alert Metrics</SubHeading>
         <ProseP>
@@ -1947,7 +1941,7 @@ npm run lint`}
 function ReleaseNotes() {
   const releases = [
     {
-      version: "2.10.0",
+      version: "2.10.1",
       date: "2026-03-03",
       badge: "latest",
       badgeColor: "bg-emerald-500/15 text-emerald-400 border-emerald-500/20",
@@ -2178,7 +2172,7 @@ function DocSidebar({
           <BookOpen className="w-4 h-4 text-violet-400" />
           <span className="text-sm font-semibold text-white">GitDash Docs</span>
           <span className="text-xs px-1.5 py-0.5 rounded bg-violet-500/15 text-violet-400 border border-violet-500/20 font-mono">
-            v{process.env.NEXT_PUBLIC_APP_VERSION ?? "2.10.0"}
+            v{process.env.NEXT_PUBLIC_APP_VERSION ?? "2.10.1"}
           </span>
         </div>
         {/* Mobile close */}
@@ -2319,8 +2313,16 @@ export default function DocsPage() {
     "feat-alerts": <FeatureAlerts />,
     "feat-settings": <FeatureSettings />,
     "feat-org":           <FeatureOrg />,
-    "metrics-reference":  <MetricsReference />,
-    "api-reference":      <APIReference />,
+    "metrics-reference":    <MetricsReference onNavigate={setActive} />,
+    "metrics-dora":         <MetricsDora />,
+    "metrics-pr-cycle":     <MetricsPrCycle />,
+    "metrics-pr-health":    <MetricsPrHealth />,
+    "metrics-workflow":     <MetricsWorkflow />,
+    "metrics-performance":  <MetricsPerformance />,
+    "metrics-reliability":  <MetricsReliability />,
+    "metrics-team":         <MetricsTeam />,
+    "metrics-ci-alerts":    <MetricsCiAlerts />,
+    "api-reference":        <APIReference />,
     "faq": <FAQ />,
     "contributing": <Contributing />,
     "release-notes": <ReleaseNotes />,
@@ -2415,7 +2417,7 @@ export default function DocsPage() {
 
           {/* Footer */}
           <footer className="mt-8 pb-4 text-center text-xs text-slate-600 space-y-1">
-            <p>GitDash v{process.env.NEXT_PUBLIC_APP_VERSION ?? "2.10.0"} — GitHub Actions Dashboard</p>
+            <p>GitDash v{process.env.NEXT_PUBLIC_APP_VERSION ?? "2.10.1"} — GitHub Actions Dashboard</p>
             <p>
               <a href="https://github.com/dinhdobathi1992/gitdash" target="_blank" rel="noreferrer" className="hover:text-slate-400 transition-colors">
                 Open source on GitHub

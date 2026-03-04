@@ -306,16 +306,20 @@ function WorkflowContent() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
         <StatCard label="Success Rate" value={runsLoading ? "—" : `${successRate}%`}
           sub={`${successCount} of ${completed.length} completed`}
-          icon={CheckCircle} iconColor="text-green-400" />
+          icon={CheckCircle} iconColor="text-green-400"
+          tooltip="Percentage of completed runs (excluding cancelled/skipped) that finished with conclusion = success. Calculated over the runs loaded for this view." />
         <StatCard label="Avg Duration" value={runsLoading ? "—" : formatDuration(avgDuration)}
           sub={`p95: ${formatDuration(p95Duration)}`}
-          icon={Clock} iconColor="text-violet-400" />
+          icon={Clock} iconColor="text-violet-400"
+          tooltip="Mean run duration across all loaded runs. The sub-label shows the p95 — the value that 95% of runs finish under. A rising p95 indicates a long-tail performance regression." />
         <StatCard label="Avg Queue Wait" value={runsLoading ? "—" : formatDuration(avgQueue)}
           sub="Time before first step"
-          icon={Timer} iconColor="text-amber-400" />
+          icon={Timer} iconColor="text-amber-400"
+          tooltip="Average time between a run being triggered and its first job actually starting. This is pure runner wait time. High values indicate runner capacity constraints, not slow tests." />
         <StatCard label="Total Runs" value={runsLoading ? "—" : safeRuns.length}
           sub={`${failureCount} failed`}
-          icon={Activity} iconColor="text-blue-400" />
+          icon={Activity} iconColor="text-blue-400"
+          tooltip="Total workflow runs loaded for this view. The sub-label shows how many completed runs ended with a failure conclusion." />
       </div>
 
       {/* ── tabs ── */}
@@ -583,7 +587,7 @@ function PerformanceTab({ jobStats, loading, error, analysedCount, requestedCoun
         </div>
       )}
       {/* job avg/p95 */}
-      <ChartCard title="Job Duration" sub="Average vs p95 (minutes)">
+      <ChartCard title="Job Duration" sub="Average vs p95 (minutes)" tooltip="Per-job average duration vs p95 duration (in minutes) across all loaded runs. The gap between average and p95 reveals tail latency — a large gap means some runs are dramatically slower, often due to flaky setup steps or resource contention.">
         <ResponsiveContainer width="100%" height={Math.max(180, sortedJobs.length * 44)}>
           <BarChart data={sortedJobs.map(j => ({
             name: j.name.length > 28 ? j.name.slice(0, 26) + "…" : j.name,
@@ -603,7 +607,7 @@ function PerformanceTab({ jobStats, loading, error, analysedCount, requestedCoun
 
       {/* stacked waterfall */}
       {waterfallData.length > 0 && (
-        <ChartCard title="Job Composition per Run" sub="Stacked duration per run (minutes) — last 20 runs">
+        <ChartCard title="Job Composition per Run" sub="Stacked duration per run (minutes) — last 20 runs" tooltip="Stacked bar chart showing how each job contributed to total run duration for the last 20 runs. Useful for spotting which job dominates build time and whether that share is growing over time.">
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={waterfallData} barSize={14}>
               <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
@@ -620,7 +624,7 @@ function PerformanceTab({ jobStats, loading, error, analysedCount, requestedCoun
       )}
 
       {/* slowest steps table */}
-      <ChartCard title="Slowest Steps" sub="Top 10 by average runtime across all jobs">
+      <ChartCard title="Slowest Steps" sub="Top 10 by average runtime across all jobs" tooltip="Top 10 individual step names ranked by average runtime, aggregated across all jobs and runs. Use this to identify which specific step (e.g., 'npm install', 'docker build') is the biggest contributor to overall build time and the best candidate for optimization.">
         <div className="overflow-x-auto">
           <table className="w-full text-sm mt-2">
             <thead>
@@ -890,18 +894,22 @@ function ReliabilityTab({ runs, completed, anomalyMap }: { runs: WorkflowRun[]; 
       {/* reliability stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="MTTR" value={mttr !== null ? formatDuration(mttr) : "—"}
-          sub="Mean time to recovery" icon={TrendingUp} iconColor="text-green-400" />
+          sub="Mean time to recovery" icon={TrendingUp} iconColor="text-green-400"
+          tooltip="Mean Time To Recovery — the average time between a failing run and the next successful run on the same branch. Measures how quickly the team resolves CI breakages. Elite DORA target: under 1 hour." />
         <StatCard label="Failure Streak" value={failureStreak}
           sub={failureStreak > 0 ? "Consecutive failures" : "No active streak"}
-          icon={FlameKindling} iconColor={failureStreak >= 3 ? "text-red-400" : "text-slate-400"} />
+          icon={FlameKindling} iconColor={failureStreak >= 3 ? "text-red-400" : "text-slate-400"}
+          tooltip="Number of consecutive failed runs on the default branch with no successful run in between. Any streak ≥ 3 is flagged red and typically means the main branch is broken." />
         <StatCard label="Flaky Branches" value={flakyBranches.length}
-          sub="Branches with flip-flop results" icon={TrendingDown} iconColor="text-amber-400" />
+          sub="Branches with flip-flop results" icon={TrendingDown} iconColor="text-amber-400"
+          tooltip="Branches where the last 10 runs alternated between success and failure (flip-flop pattern). Flaky branches indicate non-deterministic tests or environment instability rather than genuine regressions." />
         <StatCard label="Re-run Rate" value={`${rerunRate}%`}
-          sub="Runs with attempt > 1" icon={RotateCcw} iconColor="text-blue-400" />
+          sub="Runs with attempt > 1" icon={RotateCcw} iconColor="text-blue-400"
+          tooltip="Percentage of runs that were manually re-triggered (run_attempt > 1). A high re-run rate is a strong signal of flaky tests or infrastructure instability. Target: under 5%." />
       </div>
 
       {/* success/failure timeline */}
-      <ChartCard title="Pass / Fail Timeline" sub="1 = success · -1 = failure — ordered oldest → newest">
+      <ChartCard title="Pass / Fail Timeline" sub="1 = success · -1 = failure — ordered oldest → newest" tooltip="Visual timeline of run outcomes ordered chronologically. Green bars (+1) are successful runs; red bars (-1) are failures. Gaps or clusters of red immediately reveal the duration and pattern of outages. Hover any bar to see the run number and conclusion.">
         <ResponsiveContainer width="100%" height={160}>
           <BarChart data={timeline} barSize={6}>
             <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
@@ -933,7 +941,7 @@ function ReliabilityTab({ runs, completed, anomalyMap }: { runs: WorkflowRun[]; 
 
       {/* flaky branches */}
       {flakyBranches.length > 0 && (
-        <ChartCard title="Flaky Branches" sub="Branches that oscillated between success and failure">
+        <ChartCard title="Flaky Branches" sub="Branches that oscillated between success and failure" tooltip="Branches where success and failure results alternated in the last 10 runs (flip-flop). This pattern suggests environment-dependent or non-deterministic tests rather than code defects. Consider quarantining or rewriting these tests.">
           <div className="flex flex-wrap gap-2 mt-2">
             {flakyBranches.map(b => (
               <span key={b} className="px-2.5 py-1 rounded-lg bg-amber-500/10 border border-amber-500/20 text-xs text-amber-300 font-mono">
@@ -946,7 +954,7 @@ function ReliabilityTab({ runs, completed, anomalyMap }: { runs: WorkflowRun[]; 
 
       {/* ── Anomaly Detection ──────────────────────────────────────────────── */}
       {anomalyMap.size > 0 && (
-        <ChartCard title="Anomaly Detection" sub={`${anomalyMap.size} run${anomalyMap.size !== 1 ? "s" : ""} with statistical outliers (> 2 stddev from rolling baseline)`}>
+        <ChartCard title="Anomaly Detection" sub={`${anomalyMap.size} run${anomalyMap.size !== 1 ? "s" : ""} with statistical outliers (> 2 stddev from rolling baseline)`} tooltip="Runs whose duration deviated more than 2 standard deviations from the rolling 10-run baseline. Anomalies are classified as 'moderate' (2–3 stddev) or 'extreme' (> 3 stddev). These are statistical outliers — investigate them for stuck jobs, infrastructure issues, or unusually large changesets.">
           <div className="space-y-2 mt-2">
             {Array.from(anomalyMap.values())
               .sort((a, b) => Math.abs(b.worstZ) - Math.abs(a.worstZ))
@@ -1542,6 +1550,7 @@ function DoraTab({ runs }: { runs: WorkflowRun[] }) {
     sub: string;
     icon: React.ElementType;
     detail: string;
+    tooltip: string;
   }[] = [
     {
       key: "deployment_frequency",
@@ -1551,6 +1560,7 @@ function DoraTab({ runs }: { runs: WorkflowRun[] }) {
       sub: `${dora.deployment_frequency.total} runs over ${dora.deployment_frequency.period_days} days`,
       icon: Activity,
       detail: BENCHMARKS.deployment_frequency[dora.deployment_frequency.level],
+      tooltip: "CI-based: successful runs on the default branch per day over the last 30 days. Unlike repo-level DORA (which counts GitHub Releases), this counts every green workflow run — useful for deploy-on-merge pipelines.",
     },
     {
       key: "lead_time",
@@ -1560,6 +1570,7 @@ function DoraTab({ runs }: { runs: WorkflowRun[] }) {
       sub: `p95: ${dora.lead_time.p95_ms > 0 ? formatLeadTime(dora.lead_time.p95_ms) : "—"} (${dora.lead_time.sample_size} samples)`,
       icon: Clock,
       detail: BENCHMARKS.lead_time[dora.lead_time.level],
+      tooltip: "CI-based: average time from the triggering commit timestamp to the run completing successfully. Does not include PR review time — measures purely how fast the pipeline turns a commit green.",
     },
     {
       key: "change_failure_rate",
@@ -1569,6 +1580,7 @@ function DoraTab({ runs }: { runs: WorkflowRun[] }) {
       sub: `${dora.change_failure_rate.failures} failures / ${dora.change_failure_rate.total} runs`,
       icon: AlertCircle,
       detail: BENCHMARKS.change_failure_rate[dora.change_failure_rate.level],
+      tooltip: "CI-based: percentage of default-branch workflow runs that ended with a failure conclusion (not cancelled or skipped). A direct CI failure rate — more precise than PR heuristics but only captures build failures, not production incidents.",
     },
     {
       key: "mttr",
@@ -1578,6 +1590,7 @@ function DoraTab({ runs }: { runs: WorkflowRun[] }) {
       sub: `${dora.mttr.recoveries} recovery event${dora.mttr.recoveries !== 1 ? "s" : ""}`,
       icon: TrendingUp,
       detail: BENCHMARKS.mttr[dora.mttr.level],
+      tooltip: "CI-based Mean Time To Recovery: average time from a failed run to the next successful run on the same branch. Measures build recovery speed rather than production incident response — does not account for manual rollbacks.",
     },
   ];
 
@@ -1632,9 +1645,12 @@ function DoraTab({ runs }: { runs: WorkflowRun[] }) {
                   <span className={cn("p-1.5 rounded-lg bg-slate-700/50", colors.text)}>
                     <Icon className="w-3.5 h-3.5" />
                   </span>
-                  <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
-                    {m.label}
-                  </span>
+                  <div className="flex items-center gap-0.5">
+                    <span className="text-xs font-medium text-slate-400 uppercase tracking-wider">
+                      {m.label}
+                    </span>
+                    <MetricTooltip text={m.tooltip} align="left" />
+                  </div>
                 </div>
                 <span className={cn(
                   "px-2 py-0.5 rounded-full text-[10px] font-semibold uppercase border",
