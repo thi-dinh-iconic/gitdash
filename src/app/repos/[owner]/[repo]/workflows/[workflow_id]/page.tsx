@@ -50,6 +50,7 @@ import {
   ANOMALY_BADGE_STYLES,
   type RunAnomalies,
 } from "@/lib/anomaly";
+import { MetricTooltip } from "@/components/MetricTooltip";
 
 // ── colour palette ────────────────────────────────────────────────────────────
 const OUTCOME_COLORS: Record<string, string> = {
@@ -461,7 +462,7 @@ function OverviewTab({ runs, completed }: { runs: WorkflowRun[]; completed: Work
 
       {/* rolling success + duration */}
       <div className="grid lg:grid-cols-2 gap-6">
-        <ChartCard title="Rolling Success Rate" sub="7-run sliding window">
+        <ChartCard title="Rolling Success Rate" sub="7-run sliding window" tooltip="Moving average of the CI pass rate calculated over every 7 consecutive runs. Smooths out single-run noise — a sustained dip below 80% (red dashed line) indicates a systemic reliability problem, not just a fluke.">
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={rollingRate}>
               <defs>
@@ -480,7 +481,7 @@ function OverviewTab({ runs, completed }: { runs: WorkflowRun[]; completed: Work
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Duration Trend" sub="Run time vs queue wait (minutes)">
+        <ChartCard title="Duration Trend" sub="Run time vs queue wait (minutes)" tooltip="Purple line: total run time per run (minutes). Amber line: time the run spent waiting for a runner before the first job started (queue wait). A rising purple line means the workflow is getting slower; a rising amber line means runner capacity is the bottleneck.">
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={durTrend}>
               <defs>
@@ -506,7 +507,7 @@ function OverviewTab({ runs, completed }: { runs: WorkflowRun[]; completed: Work
 
       {/* outcome + frequency */}
       <div className="grid lg:grid-cols-3 gap-6">
-        <ChartCard title="Outcome Breakdown">
+        <ChartCard title="Outcome Breakdown" tooltip="Donut chart showing the distribution of run conclusions (success, failure, cancelled, skipped, timed_out) over the last 60 runs. A large failure or timed_out slice warrants immediate investigation.">
           <ResponsiveContainer width="100%" height={200}>
             <PieChart>
               <Pie data={breakdown} cx="50%" cy="50%" innerRadius={52} outerRadius={78} paddingAngle={3} dataKey="value">
@@ -519,7 +520,7 @@ function OverviewTab({ runs, completed }: { runs: WorkflowRun[]; completed: Work
         </ChartCard>
 
         <div className="lg:col-span-2">
-          <ChartCard title="Run Frequency" sub="Runs per day (last 14 days)">
+          <ChartCard title="Run Frequency" sub="Runs per day (last 14 days)" tooltip="Number of workflow runs triggered each calendar day over the last 14 days. Gaps reveal days with no activity (weekend, holiday, or blocked pipelines). Unusual spikes may indicate retry storms or misconfigured triggers.">
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={freqData} barSize={18}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
@@ -1712,7 +1713,7 @@ function formatLeadTime(ms: number): string {
 // ══════════════════════════════════════════════════════════════════════════════
 // SHARED SMALL COMPONENTS
 // ══════════════════════════════════════════════════════════════════════════════
-function ChartCard({ title, sub, children }: { title: string; sub?: string; children: React.ReactNode }) {
+function ChartCard({ title, sub, tooltip, children }: { title: string; sub?: string; tooltip?: string; children: React.ReactNode }) {
   const cardRef = useRef<HTMLDivElement>(null);
   const [pngError, setPngError] = useState<string | null>(null);
 
@@ -1742,7 +1743,10 @@ function ChartCard({ title, sub, children }: { title: string; sub?: string; chil
     <div ref={cardRef} className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-5">
       <div className="flex items-start justify-between gap-2 mb-1">
         <div>
-          <h3 className="text-sm font-semibold text-white">{title}</h3>
+          <div className="flex items-center gap-0.5">
+            <h3 className="text-sm font-semibold text-white">{title}</h3>
+            {tooltip && <MetricTooltip text={tooltip} align="left" />}
+          </div>
           {sub && <p className="text-xs text-slate-500 mt-0.5">{sub}</p>}
         </div>
         <div className="flex items-center gap-2 shrink-0 mt-0.5">

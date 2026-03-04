@@ -338,6 +338,7 @@ export function PrLifecycleExtension({
           <div className="flex items-center gap-2 mb-1">
             <GitPullRequest className="w-4 h-4 text-violet-400" />
             <span className="text-xs text-slate-400">Open PRs</span>
+            <MetricTooltip text="Total number of pull requests currently open in this repository. A growing count over time signals a review bottleneck or accumulating WIP." align="left" />
           </div>
           <p className="text-2xl font-bold text-white">{data.total_open}</p>
         </div>
@@ -345,6 +346,7 @@ export function PrLifecycleExtension({
           <div className="flex items-center gap-2 mb-1">
             <Clock className="w-4 h-4 text-blue-400" />
             <span className="text-xs text-slate-400">Review P50</span>
+            <MetricTooltip text="Median time from a PR being opened to receiving its first review. 50% of PRs are reviewed faster than this value. Target: under 4 hours for active repos." align="left" />
           </div>
           <p className="text-2xl font-bold text-white">
             {fmtHours(data.time_to_first_review_p50_hours)}
@@ -354,6 +356,7 @@ export function PrLifecycleExtension({
           <div className="flex items-center gap-2 mb-1">
             <Clock className="w-4 h-4 text-violet-400" />
             <span className="text-xs text-slate-400">Review P90</span>
+            <MetricTooltip text="90th-percentile time to first review — 90% of PRs are reviewed within this time. A large gap between P50 and P90 means a long tail of ignored PRs. Target: under 1 day." align="left" />
           </div>
           <p className="text-2xl font-bold text-white">
             {fmtHours(data.time_to_first_review_p90_hours)}
@@ -363,6 +366,7 @@ export function PrLifecycleExtension({
           <div className="flex items-center gap-2 mb-1">
             <XCircle className="w-4 h-4 text-amber-400" />
             <span className="text-xs text-slate-400">Abandon Rate</span>
+            <MetricTooltip text="Percentage of recently closed PRs that were closed without being merged. High abandon rates may indicate unclear requirements, blocked work, or PRs that were superseded. Target: under 10%." align="right" />
           </div>
           <p className={cn(
             "text-2xl font-bold",

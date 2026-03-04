@@ -1492,6 +1492,98 @@ function MetricsReference() {
         />
       </DocCard>
 
+      {/* ── Workflow Overview Metrics ────────────────────────────────────── */}
+      <DocCard>
+        <SubHeading>Workflow Overview Tab</SubHeading>
+        <ProseP>
+          The Overview tab of the Workflow Detail page shows four charts that give a quick health pulse
+          for a specific GitHub Actions workflow.
+        </ProseP>
+        <DocTable
+          headers={["Chart", "What it shows", "How to read it"]}
+          rows={[
+            [
+              "Rolling Success Rate",
+              "Moving average of CI pass rate over every 7 consecutive runs.",
+              "A dip below the red 80% reference line that persists across multiple windows indicates a systemic problem, not just a fluke failure.",
+            ],
+            [
+              "Duration Trend",
+              "Two overlaid area series: purple = total run time (minutes), amber = queue wait time (minutes), plotted for the last 60 runs.",
+              "Rising purple = the workflow itself is getting slower (test suite growth, cache misses). Rising amber = runner capacity is the bottleneck.",
+            ],
+            [
+              "Outcome Breakdown",
+              "Donut chart of run conclusions over the last 60 runs: success, failure, cancelled, skipped, timed_out.",
+              "A large failure or timed_out slice needs immediate attention. Cancelled runs often indicate force-pushes interrupting in-flight runs.",
+            ],
+            [
+              "Run Frequency",
+              "Bar chart of runs triggered per calendar day over the last 14 days.",
+              "Gaps are expected on holidays. Unusual spikes may indicate retry storms, misconfigured cron schedules, or a flood of PRs.",
+            ],
+          ]}
+        />
+      </DocCard>
+
+      {/* ── Optimization Tips ────────────────────────────────────────────── */}
+      <DocCard>
+        <SubHeading>Optimization Tips</SubHeading>
+        <ProseP>
+          GitDash automatically analyses workflow patterns and surfaces actionable suggestions in a
+          dismissible banner at the top of the Overview tab. Tips are generated from the last 60 runs.
+        </ProseP>
+        <DocTable
+          headers={["Tip type", "Trigger condition", "Suggested action"]}
+          rows={[
+            ["Weekend runs", ">50% of runs triggered on Sat/Sun", "Move scheduled/cron workflows to weekday-only schedules to save CI minutes."],
+            ["High cancel rate", ">20% of runs cancelled", "Consider using concurrency groups to cancel superseded runs instead of letting them start."],
+            ["Long queue wait", "Queue wait P95 > 5 minutes", "Add more runners or switch to larger GitHub-hosted runner tiers."],
+            ["High re-run rate", ">10% of runs re-triggered manually", "Investigate flaky tests or infrastructure instability."],
+            ["Duration regression", "P95 duration grown >25% in last 14 days vs prior 14 days", "Profile slow jobs — look for cache misses, dependency bloat, or uncapped test parallelism."],
+          ]}
+        />
+      </DocCard>
+
+      {/* ── CI-based DORA (DORA tab) ─────────────────────────────────────── */}
+      <DocCard>
+        <SubHeading>CI-based DORA (Workflow DORA Tab)</SubHeading>
+        <Callout type="info">
+          The Workflow Detail page has a dedicated <strong>DORA tab</strong> that computes the 4 Keys
+          from CI run data rather than from PRs and GitHub Releases. This gives a workflow-level
+          proxy view of delivery performance.
+        </Callout>
+        <DocTable
+          headers={["Metric", "CI-based calculation", "Difference from repo-level DORA"]}
+          rows={[
+            [
+              "Deploy Frequency",
+              "Successful runs on the default branch per day over the last 30 days.",
+              "Repo-level uses Releases or merged PRs. CI-based counts every successful workflow run — useful for workflows that deploy on every merge.",
+            ],
+            [
+              "Lead Time",
+              "Average time from the triggering commit timestamp to the run completing successfully.",
+              "Repo-level measures first commit → PR merged. CI-based measures commit → CI green — does not include PR review time.",
+            ],
+            [
+              "Change Failure Rate",
+              "Percentage of default-branch runs that failed (not cancelled/skipped).",
+              "Repo-level uses hotfix/revert PR heuristics. CI-based is a direct CI failure rate — more precise but only reflects build failures, not production incidents.",
+            ],
+            [
+              "MTTR",
+              "Average time from a failed run to the next successful run on the same branch.",
+              "Repo-level uses hotfix PR cycle time. CI-based measures build recovery time — does not account for manual intervention or rollbacks.",
+            ],
+          ]}
+        />
+        <ProseP>
+          The DORA tab also shows a <strong>DORA Performance Levels</strong> reference table with the
+          industry benchmarks from the State of DevOps Report for all four metrics.
+        </ProseP>
+      </DocCard>
+
       {/* ── CI Workflow Metrics ──────────────────────────────────────────── */}
       <DocCard>
         <SubHeading>CI / Workflow Metrics</SubHeading>
