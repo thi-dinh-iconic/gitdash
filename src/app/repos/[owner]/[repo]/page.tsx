@@ -18,6 +18,7 @@ import {
   Search, X, ChevronRight, Zap, Shield, Users, ShieldCheck,
 } from "lucide-react";
 import { cn, fuzzyMatch, highlightSegments } from "@/lib/utils";
+import { useFeatureFlags } from "@/components/FeatureFlagsProvider";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
   ResponsiveContainer, Legend,
@@ -260,6 +261,7 @@ function Skeleton() {
 export default function RepoDetailPage() {
   const { owner, repo } = useParams<{ owner: string; repo: string }>();
   const router = useRouter();
+  const { flags } = useFeatureFlags();
 
   const {
     data: overview, error, isLoading, isValidating, mutate,
@@ -271,14 +273,14 @@ export default function RepoDetailPage() {
   const {
     data: dora, isLoading: doraLoading,
   } = useSWR<RepoDoraSummary>(
-    `/api/github/repo-dora?owner=${owner}&repo=${repo}`,
+    flags.dora ? `/api/github/repo-dora?owner=${owner}&repo=${repo}` : null,
     fetcher<RepoDoraSummary>
   );
 
   const {
     data: prHealth, isLoading: prHealthLoading,
   } = useSWR<OpenPrHealthResponse>(
-    `/api/github/open-pr-health?owner=${owner}&repo=${repo}`,
+    flags.prLifecycle ? `/api/github/open-pr-health?owner=${owner}&repo=${repo}` : null,
     fetcher<OpenPrHealthResponse>
   );
 
@@ -407,48 +409,54 @@ export default function RepoDetailPage() {
       ) : (
         <div className="space-y-6">
           {/* DORA KPI Cards */}
-          {doraLoading ? (
-            <DoraKpiSkeleton />
-          ) : dora ? (
-            <div className="space-y-4">
-              <DoraKpiCards data={dora} />
+          {flags.dora ? (
+            doraLoading ? (
+              <DoraKpiSkeleton />
+            ) : dora ? (
+              <div className="space-y-4">
+                <DoraKpiCards data={dora} />
+                <button
+                  onClick={() => setShowDrillDown(v => !v)}
+                  className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-violet-300 transition-colors"
+                >
+                  <ChevronRight
+                    className={cn("w-3.5 h-3.5 transition-transform", showDrillDown && "rotate-90")}
+                  />
+                  {showDrillDown ? "Hide" : "Show"} drill-down charts
+                </button>
+                {showDrillDown && overview && (
+                  <DoraDrillDown dora={dora} overview={overview} />
+                )}
+              </div>
+            ) : null
+          ) : (
+            <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-slate-800 bg-slate-900/30 text-xs text-slate-500">
+              <Zap className="w-3.5 h-3.5 shrink-0" />
+              DORA Metrics are disabled — enable in <a href="/settings" className="text-violet-400 hover:underline ml-1">Settings → Feature Flags</a>
+            </div>
+          )}
 
-              {/* Drill-down toggle */}
+          {/* PR Lifecycle Extension */}
+          {flags.prLifecycle ? (
+            <div>
               <button
-                onClick={() => setShowDrillDown(v => !v)}
+                onClick={() => setShowPrLifecycle(v => !v)}
                 className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-violet-300 transition-colors"
               >
                 <ChevronRight
-                  className={cn("w-3.5 h-3.5 transition-transform", showDrillDown && "rotate-90")}
+                  className={cn("w-3.5 h-3.5 transition-transform", showPrLifecycle && "rotate-90")}
                 />
-                {showDrillDown ? "Hide" : "Show"} drill-down charts
+                {showPrLifecycle ? "Hide" : "Show"} PR lifecycle analytics
               </button>
-
-              {showDrillDown && overview && (
-                <DoraDrillDown dora={dora} overview={overview} />
+              {showPrLifecycle && (
+                prHealthLoading ? (
+                  <div className="mt-3"><PrLifecycleSkeleton /></div>
+                ) : prHealth ? (
+                  <div className="mt-3"><PrLifecycleExtension data={prHealth} /></div>
+                ) : null
               )}
             </div>
           ) : null}
-
-          {/* PR Lifecycle Extension (Phase 3) */}
-          <div>
-            <button
-              onClick={() => setShowPrLifecycle(v => !v)}
-              className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-violet-300 transition-colors"
-            >
-              <ChevronRight
-                className={cn("w-3.5 h-3.5 transition-transform", showPrLifecycle && "rotate-90")}
-              />
-              {showPrLifecycle ? "Hide" : "Show"} PR lifecycle analytics
-            </button>
-            {showPrLifecycle && (
-              prHealthLoading ? (
-                <div className="mt-3"><PrLifecycleSkeleton /></div>
-              ) : prHealth ? (
-                <div className="mt-3"><PrLifecycleExtension data={prHealth} /></div>
-              ) : null
-            )}
-          </div>
 
           {/* Duration chart */}
           <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-5">

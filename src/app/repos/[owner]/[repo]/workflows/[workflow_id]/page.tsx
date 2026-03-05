@@ -51,6 +51,20 @@ import {
   type RunAnomalies,
 } from "@/lib/anomaly";
 import { MetricTooltip } from "@/components/MetricTooltip";
+import { useFeatureFlags } from "@/components/FeatureFlagsProvider";
+
+// ── shared disabled-feature placeholder ──────────────────────────────────────
+function DisabledFeature({ label, settingsHref }: { label: string; settingsHref: string }) {
+  return (
+    <div className="flex items-center gap-2 px-4 py-5 rounded-xl border border-slate-800 bg-slate-900/30 text-xs text-slate-500">
+      <Zap className="w-3.5 h-3.5 shrink-0 text-slate-600" />
+      <span>
+        <strong className="text-slate-400">{label}</strong> is disabled.{" "}
+        <a href={settingsHref} className="text-violet-400 hover:underline">Enable in Settings → Feature Flags</a>
+      </span>
+    </div>
+  );
+}
 
 // ── colour palette ────────────────────────────────────────────────────────────
 const OUTCOME_COLORS: Record<string, string> = {
@@ -163,6 +177,7 @@ function WorkflowContent() {
   }>();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { flags } = useFeatureFlags();
 
   // Active tab is stored in the URL (?tab=overview) so it survives refresh / link sharing.
   const rawTab = searchParams.get("tab") as Tab | null;
@@ -198,8 +213,8 @@ function WorkflowContent() {
     }
   );
 
-  // ── job stats (only fetched when Performance tab is active) ──────────────
-  const jobStatsKey = tab === "performance"
+  // ── job stats (only fetched when Performance tab is active AND feature enabled) ──
+  const jobStatsKey = (tab === "performance" && flags.performanceTab)
     ? `/api/github/job-stats?owner=${owner}&repo=${repo}&workflow_id=${workflow_id}&per_page=${Math.min(perPage, 30)}`
     : null;
   const {
@@ -248,8 +263,11 @@ function WorkflowContent() {
   const queues        = safeRuns.map(r => r.queue_wait_ms ?? 0).filter(Boolean);
   const avgQueue      = queues.length ? Math.round(avg(queues)) : undefined;
 
-  // ── anomaly detection ─────────────────────────────────────────────────────
-  const anomalyMap = useMemo(() => detectAnomalies(safeRuns), [safeRuns]);
+  // ── anomaly detection (skipped when feature disabled) ────────────────────
+  const anomalyMap = useMemo(
+    () => flags.anomalyDetection ? detectAnomalies(safeRuns) : new Map(),
+    [safeRuns, flags.anomalyDetection]
+  );
 
   return (
     <div className="p-8">
@@ -355,8 +373,16 @@ function WorkflowContent() {
           {/* All tabs are always mounted — display:none keeps charts alive so
               Recharts never re-measures on switch, making tabs instant. */}
           <div role="tabpanel" id="tabpanel-overview"     aria-labelledby="tab-overview"     hidden={tab !== "overview"}><OverviewTab    runs={safeRuns} completed={completed} /></div>
-          <div role="tabpanel" id="tabpanel-performance"  aria-labelledby="tab-performance"  hidden={tab !== "performance"}><PerformanceTab jobStats={jobStats} loading={jobStatsLoading} error={jobStatsError} analysedCount={Math.min(perPage, 30)} requestedCount={perPage} runs={safeRuns} /></div>
-          <div role="tabpanel" id="tabpanel-reliability"  aria-labelledby="tab-reliability"  hidden={tab !== "reliability"}><ReliabilityTab runs={safeRuns} completed={completed} anomalyMap={anomalyMap} /></div>
+          <div role="tabpanel" id="tabpanel-performance" aria-labelledby="tab-performance" hidden={tab !== "performance"}>
+            {flags.performanceTab
+              ? <PerformanceTab jobStats={jobStats} loading={jobStatsLoading} error={jobStatsError} analysedCount={Math.min(perPage, 30)} requestedCount={perPage} runs={safeRuns} />
+              : <DisabledFeature label="Performance Tab" settingsHref="/settings" />}
+          </div>
+          <div role="tabpanel" id="tabpanel-reliability" aria-labelledby="tab-reliability" hidden={tab !== "reliability"}>
+            {flags.reliabilityTab
+              ? <ReliabilityTab runs={safeRuns} completed={completed} anomalyMap={anomalyMap} />
+              : <DisabledFeature label="Reliability Tab" settingsHref="/settings" />}
+          </div>
           <div role="tabpanel" id="tabpanel-triggers"     aria-labelledby="tab-triggers"     hidden={tab !== "triggers"}><TriggersTab    runs={safeRuns} /></div>
           <div role="tabpanel" id="tabpanel-dora"         aria-labelledby="tab-dora"         hidden={tab !== "dora"}><DoraTab        runs={safeRuns} /></div>
           <div role="tabpanel" id="tabpanel-runs"         aria-labelledby="tab-runs"         hidden={tab !== "runs"}><RunsTab        runs={safeRuns} owner={owner} repo={repo} onRefresh={() => mutateRuns()} isRefreshing={runsValidating} anomalyMap={anomalyMap} /></div>

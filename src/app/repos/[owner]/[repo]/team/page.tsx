@@ -12,6 +12,7 @@ import { BusFactorHeatmap, BusFactorSkeleton } from "@/components/BusFactorHeatm
 import type { TeamStatsResponse, ContributorStat } from "@/app/api/github/team-stats/route";
 import type { RepoContributorsResponse } from "@/app/api/github/repo-contributors/route";
 import type { BusFactorResponse } from "@/app/api/github/bus-factor/route";
+import { useFeatureFlags } from "@/components/FeatureFlagsProvider";
 import {
   AlertCircle,
   Users,
@@ -324,6 +325,7 @@ function SummaryBar({ data }: { data: TeamStatsResponse }) {
 
 export default function TeamAnalyticsPage() {
   const { owner, repo } = useParams<{ owner: string; repo: string }>();
+  const { flags } = useFeatureFlags();
   const [showLeaderboard, setShowLeaderboard] = useState(false);
   const [showMatrix, setShowMatrix] = useState(false);
   const [showBusFactor, setShowBusFactor] = useState(false);
@@ -334,16 +336,15 @@ export default function TeamAnalyticsPage() {
     { revalidateOnFocus: false }
   );
 
-  // Phase 2: PR-based contributor leaderboard
   const { data: contribData, isLoading: contribLoading } = useSWR<RepoContributorsResponse>(
     `/api/github/repo-contributors?owner=${owner}&repo=${repo}`,
     fetcher<RepoContributorsResponse>,
     { revalidateOnFocus: false }
   );
 
-  // Phase 4: Bus factor per module
+  // Bus factor — skipped when feature disabled
   const { data: busData, isLoading: busLoading } = useSWR<BusFactorResponse>(
-    `/api/github/bus-factor?owner=${owner}&repo=${repo}`,
+    flags.busFactor ? `/api/github/bus-factor?owner=${owner}&repo=${repo}` : null,
     fetcher<BusFactorResponse>,
     { revalidateOnFocus: false }
   );
@@ -527,29 +528,38 @@ export default function TeamAnalyticsPage() {
 
           {/* ── Phase 4: Bus Factor Heatmap ─────────────────────────────────── */}
           <div>
-            <button
-              onClick={() => setShowBusFactor((v) => !v)}
-              className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-violet-300 transition-colors"
-            >
-              <ChevronRight
-                className={cn("w-3.5 h-3.5 transition-transform", showBusFactor && "rotate-90")}
-              />
-              <FolderTree className="w-3.5 h-3.5" />
-              {showBusFactor ? "Hide" : "Show"} Knowledge & Bus Factor Map
-            </button>
-            {showBusFactor && (
-              <div className="mt-3 rounded-xl border border-slate-800 bg-slate-900/40 p-5">
-                <h3 className="text-sm font-semibold text-white mb-0.5">Knowledge & Bus Factor Map</h3>
-                <p className="text-xs text-slate-500 mb-4">
-                  Per-module contributor concentration — modules with bus factor = 1 are knowledge silos
-                </p>
-                {busLoading && <BusFactorSkeleton />}
-                {busData && <BusFactorHeatmap data={busData} />}
-                {!busLoading && !busData && (
-                  <p className="text-xs text-slate-600 italic py-4 text-center">
-                    Failed to load bus factor data.
-                  </p>
+            {flags.busFactor ? (
+              <>
+                <button
+                  onClick={() => setShowBusFactor((v) => !v)}
+                  className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-violet-300 transition-colors"
+                >
+                  <ChevronRight
+                    className={cn("w-3.5 h-3.5 transition-transform", showBusFactor && "rotate-90")}
+                  />
+                  <FolderTree className="w-3.5 h-3.5" />
+                  {showBusFactor ? "Hide" : "Show"} Knowledge & Bus Factor Map
+                </button>
+                {showBusFactor && (
+                  <div className="mt-3 rounded-xl border border-slate-800 bg-slate-900/40 p-5">
+                    <h3 className="text-sm font-semibold text-white mb-0.5">Knowledge & Bus Factor Map</h3>
+                    <p className="text-xs text-slate-500 mb-4">
+                      Per-module contributor concentration — modules with bus factor = 1 are knowledge silos
+                    </p>
+                    {busLoading && <BusFactorSkeleton />}
+                    {busData && <BusFactorHeatmap data={busData} />}
+                    {!busLoading && !busData && (
+                      <p className="text-xs text-slate-600 italic py-4 text-center">
+                        Failed to load bus factor data.
+                      </p>
+                    )}
+                  </div>
                 )}
+              </>
+            ) : (
+              <div className="flex items-center gap-2 px-4 py-3 rounded-xl border border-slate-800 bg-slate-900/30 text-xs text-slate-500">
+                <span>Bus Factor Analysis is disabled —</span>
+                <a href="/settings" className="text-violet-400 hover:underline">Enable in Settings → Feature Flags</a>
               </div>
             )}
           </div>

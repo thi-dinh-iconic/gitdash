@@ -4,11 +4,14 @@ import { useState } from "react";
 import useSWR from "swr";
 import { fetcher, FetchError } from "@/lib/swr";
 import { useAuth } from "@/components/AuthProvider";
+import { useFeatureFlags } from "@/components/FeatureFlagsProvider";
 import { Breadcrumb } from "@/components/Sidebar";
 import type { BillingData } from "@/app/api/github/billing/route";
+import type { FeatureFlags } from "@/lib/feature-flags";
 import {
   CheckCircle, AlertCircle, ExternalLink, Clock, CreditCard,
   Monitor, Apple, Server, LogOut, User, Building2, Key, Eye, EyeOff,
+  ToggleLeft, ToggleRight, Zap,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -277,6 +280,128 @@ function PatWidget({ login }: { login: string }) {
   );
 }
 
+// ── Feature flags widget ──────────────────────────────────────────────────────
+type FlagDef = {
+  key: keyof FeatureFlags;
+  label: string;
+  description: string;
+  affects: string;
+};
+
+const FLAG_DEFS: FlagDef[] = [
+  {
+    key: "dora",
+    label: "DORA Metrics",
+    description: "Deploy Frequency, Lead Time, Change Failure Rate, MTTR KPI cards and drill-down charts.",
+    affects: "Repository Overview",
+  },
+  {
+    key: "prLifecycle",
+    label: "PR Lifecycle Health",
+    description: "Open PRs, Review P50/P90, Abandon Rate, Age Distribution, and concurrent WIP by author.",
+    affects: "Repository Overview",
+  },
+  {
+    key: "performanceTab",
+    label: "Performance Tab",
+    description: "Job Duration avg vs p95, Job Composition per Run, Slowest Steps — requires fetching job-level data.",
+    affects: "Workflow Detail → Performance",
+  },
+  {
+    key: "reliabilityTab",
+    label: "Reliability Tab",
+    description: "MTTR, Failure Streak, Flaky Branches, Re-run Rate, Pass/Fail Timeline.",
+    affects: "Workflow Detail → Reliability",
+  },
+  {
+    key: "anomalyDetection",
+    label: "Anomaly Detection",
+    description: "Statistical outlier detection (> 2 stddev from rolling baseline) on workflow runs.",
+    affects: "Workflow Detail → Reliability",
+  },
+  {
+    key: "busFactor",
+    label: "Bus Factor Analysis",
+    description: "Per-module contributor count and Herfindahl–Hirschman Index — requires fetching full commit history.",
+    affects: "Repository Team page",
+  },
+  {
+    key: "securityScan",
+    label: "Security Scan",
+    description: "Static analysis of workflow YAML files for security anti-patterns.",
+    affects: "Repository Security page",
+  },
+  {
+    key: "costAnalytics",
+    label: "Cost Analytics",
+    description: "GitHub Actions billing breakdown by runner type and SKU.",
+    affects: "Cost Analytics page",
+  },
+];
+
+function Toggle({ on, onChange }: { on: boolean; onChange: (v: boolean) => void }) {
+  return (
+    <button
+      type="button"
+      onClick={() => onChange(!on)}
+      className={cn(
+        "shrink-0 transition-colors",
+        on ? "text-violet-400 hover:text-violet-300" : "text-slate-600 hover:text-slate-400"
+      )}
+      aria-label={on ? "Disable" : "Enable"}
+    >
+      {on
+        ? <ToggleRight className="w-8 h-8" />
+        : <ToggleLeft  className="w-8 h-8" />}
+    </button>
+  );
+}
+
+function FeaturesWidget() {
+  const { flags, setFlag } = useFeatureFlags();
+
+  return (
+    <div className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-6 space-y-5">
+      <div className="flex items-center gap-3">
+        <div className="w-9 h-9 rounded-lg bg-violet-500/20 border border-violet-500/30 flex items-center justify-center">
+          <Zap className="w-4 h-4 text-violet-400" />
+        </div>
+        <div>
+          <h2 className="text-sm font-semibold text-white">Feature Flags</h2>
+          <p className="text-xs text-slate-400">Toggle metrics on or off. Disabled features skip their API calls entirely.</p>
+        </div>
+      </div>
+
+      <div className="divide-y divide-slate-700/40">
+        {FLAG_DEFS.map((def) => (
+          <div key={def.key} className="flex items-center gap-4 py-3.5">
+            <Toggle on={flags[def.key]} onChange={(v) => setFlag(def.key, v)} />
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className={cn(
+                  "text-sm font-medium transition-colors",
+                  flags[def.key] ? "text-white" : "text-slate-500"
+                )}>
+                  {def.label}
+                </p>
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-slate-700/60 text-slate-400 font-mono">
+                  {def.affects}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{def.description}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <p className="text-[11px] text-slate-600 flex items-center gap-1.5 pt-1 border-t border-slate-700/40">
+        <CheckCircle className="w-3 h-3 text-slate-600 shrink-0" />
+        Settings are saved instantly to your browser. Navigate to the affected page to see the change.
+      </p>
+    </div>
+  );
+}
+
 // ══════════════════════════════════════════════════════════════════════════════
 export default function SettingsPage() {
   const { user, mode } = useAuth();
@@ -334,6 +459,9 @@ export default function SettingsPage() {
 
       {/* PAT management — standalone only */}
       {isStandalone && user && <PatWidget login={user.login} />}
+
+      {/* Feature flags */}
+      <FeaturesWidget />
 
       {/* Billing */}
       <BillingWidget />

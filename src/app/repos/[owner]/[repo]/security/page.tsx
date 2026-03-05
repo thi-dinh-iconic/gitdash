@@ -3,6 +3,7 @@
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import useSWR from "swr";
+import { useFeatureFlags } from "@/components/FeatureFlagsProvider";
 import { fetcher } from "@/lib/swr";
 import { RepoWorkflowBreadcrumb } from "@/components/Sidebar";
 import type {
@@ -391,9 +392,10 @@ function SummaryStrip({ data }: { data: SecurityScanResponse }) {
 
 export default function SecurityPage() {
   const { owner, repo } = useParams<{ owner: string; repo: string }>();
+  const { flags } = useFeatureFlags();
 
   const { data, error, isLoading } = useSWR<SecurityScanResponse>(
-    `/api/github/security-scan?owner=${owner}&repo=${repo}`,
+    flags.securityScan ? `/api/github/security-scan?owner=${owner}&repo=${repo}` : null,
     fetcher<SecurityScanResponse>,
     { revalidateOnFocus: false }
   );
@@ -421,8 +423,16 @@ export default function SecurityPage() {
         </Link>
       </div>
 
+      {/* Disabled state */}
+      {!flags.securityScan && (
+        <div className="flex items-center gap-2 px-4 py-4 rounded-xl border border-slate-800 bg-slate-900/30 text-sm text-slate-500">
+          Security Scan is disabled —{" "}
+          <a href="/settings" className="text-violet-400 hover:underline">Enable in Settings → Feature Flags</a>
+        </div>
+      )}
+
       {/* Loading */}
-      {isLoading && (
+      {flags.securityScan && isLoading && (
         <div className="space-y-4">
           {/* Summary strip skeleton */}
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -473,7 +483,7 @@ export default function SecurityPage() {
       )}
 
       {/* Error */}
-      {error && !isLoading && (
+      {flags.securityScan && error && !isLoading && (
         <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-6">
           <div className="flex items-center gap-2 text-red-400">
             <AlertCircle className="w-5 h-5" />
@@ -485,7 +495,7 @@ export default function SecurityPage() {
       )}
 
       {/* Empty — no workflow files */}
-      {data && !isLoading && data.workflows_scanned === 0 && (
+      {flags.securityScan && data && !isLoading && data.workflows_scanned === 0 && (
         <div className="flex flex-col items-center justify-center py-24 gap-3 text-center">
           <ShieldCheck className="w-10 h-10 text-slate-600" />
           <p className="text-slate-400 text-sm">
@@ -496,7 +506,7 @@ export default function SecurityPage() {
       )}
 
       {/* Data */}
-      {data && !isLoading && data.workflows_scanned > 0 && (
+      {flags.securityScan && data && !isLoading && data.workflows_scanned > 0 && (
         <>
           <SummaryStrip data={data} />
 
