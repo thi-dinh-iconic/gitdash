@@ -1,8 +1,13 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
+import { createContext, useContext, useSyncExternalStore } from "react";
 import {
-  FeatureFlags, DEFAULT_FLAGS, loadFlags, saveFlags,
+  FeatureFlags,
+  DEFAULT_FLAGS,
+  getSnapshot,
+  getServerSnapshot,
+  subscribeFlags,
+  updateFlag,
 } from "@/lib/feature-flags";
 
 type FeatureFlagsCtx = {
@@ -16,19 +21,16 @@ const Ctx = createContext<FeatureFlagsCtx>({
 });
 
 export function FeatureFlagsProvider({ children }: { children: React.ReactNode }) {
-  // Lazy initializer reads localStorage once on mount — avoids SSR mismatch
-  // because the function only runs client-side after hydration.
-  const [flags, setFlags] = useState<FeatureFlags>(() => loadFlags());
+  // useSyncExternalStore: server uses getServerSnapshot (DEFAULT_FLAGS),
+  // client uses getSnapshot (lazy-loads from localStorage). React reconciles
+  // the diff without a hydration error and without calling setState in an effect.
+  const flags = useSyncExternalStore(subscribeFlags, getSnapshot, getServerSnapshot);
 
-  function setFlag(key: keyof FeatureFlags, value: boolean) {
-    setFlags((prev) => {
-      const next = { ...prev, [key]: value };
-      saveFlags(next);
-      return next;
-    });
-  }
-
-  return <Ctx.Provider value={{ flags, setFlag }}>{children}</Ctx.Provider>;
+  return (
+    <Ctx.Provider value={{ flags, setFlag: updateFlag }}>
+      {children}
+    </Ctx.Provider>
+  );
 }
 
 export function useFeatureFlags() {
