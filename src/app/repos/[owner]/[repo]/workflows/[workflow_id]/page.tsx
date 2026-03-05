@@ -311,7 +311,7 @@ function WorkflowContent() {
         <StatCard label="Avg Duration" value={runsLoading ? "—" : formatDuration(avgDuration)}
           sub={`p95: ${formatDuration(p95Duration)}`}
           icon={Clock} iconColor="text-violet-400"
-          tooltip="Mean run duration across all loaded runs. The sub-label shows the p95 — the value that 95% of runs finish under. A rising p95 indicates a long-tail performance regression." />
+          tooltip="Mean execution time (run_started_at → completed_at) — queue wait is excluded. The sub-label shows p95: the value 95% of runs finish under. Does NOT include time spent waiting for a runner." />
         <StatCard label="Avg Queue Wait" value={runsLoading ? "—" : formatDuration(avgQueue)}
           sub="Time before first step"
           icon={Timer} iconColor="text-amber-400"
@@ -485,7 +485,7 @@ function OverviewTab({ runs, completed }: { runs: WorkflowRun[]; completed: Work
           </ResponsiveContainer>
         </ChartCard>
 
-        <ChartCard title="Duration Trend" sub="Run time vs queue wait (minutes)" tooltip="Purple line: total run time per run (minutes). Amber line: time the run spent waiting for a runner before the first job started (queue wait). A rising purple line means the workflow is getting slower; a rising amber line means runner capacity is the bottleneck.">
+        <ChartCard title="Action Duration Trend" sub="Execution time · Queue wait (minutes, independent series)" tooltip="Two independent series — NOT stacked. Purple = execution time only (run_started_at → completed_at). Amber = queue wait only (created_at → run_started_at). A rising purple means the workflow is getting slower. A rising amber means runner capacity is the bottleneck. Total elapsed = purple + amber.">
           <ResponsiveContainer width="100%" height={200}>
             <AreaChart data={durTrend}>
               <defs>
@@ -502,8 +502,8 @@ function OverviewTab({ runs, completed }: { runs: WorkflowRun[]; completed: Work
               <XAxis dataKey="run" tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} interval="preserveStartEnd" />
               <YAxis tick={{ fill: "#64748b", fontSize: 11 }} axisLine={false} tickLine={false} unit="m" />
               <Tooltip content={<ChartTip unit="m" />} />
-              <Area type="monotone" dataKey="duration" name="Run time"   stroke="#7c3aed" fill="url(#durGrad)"   strokeWidth={2} dot={false} />
-              <Area type="monotone" dataKey="queue"    name="Queue wait" stroke="#f59e0b" fill="url(#queueGrad)" strokeWidth={2} dot={false} />
+              <Area type="monotone" dataKey="duration" name="Execution time" stroke="#7c3aed" fill="url(#durGrad)"   strokeWidth={2} dot={false} />
+              <Area type="monotone" dataKey="queue"    name="Queue wait"     stroke="#f59e0b" fill="url(#queueGrad)" strokeWidth={2} dot={false} />
             </AreaChart>
           </ResponsiveContainer>
         </ChartCard>

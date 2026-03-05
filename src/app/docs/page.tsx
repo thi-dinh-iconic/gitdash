@@ -1398,7 +1398,7 @@ function MetricsWorkflow() {
           headers={["Chart", "What it shows", "How to read it"]}
           rows={[
             ["Rolling Success Rate", "Moving average of CI pass rate over every 7 consecutive runs.", "A dip below the red 80% reference line that persists across multiple windows indicates a systemic problem, not just a fluke failure."],
-            ["Action Duration Trend", "Two overlaid area series: purple = total run time (minutes), amber = queue wait time (minutes), plotted for the last 60 runs.", "Rising purple = the workflow itself is getting slower (test suite growth, cache misses). Rising amber = runner capacity is the bottleneck."],
+            ["Action Duration Trend", "Two independent (non-stacked) area series: purple = execution time only (run_started → completed), amber = queue wait only (triggered → run_started). Total elapsed = purple + amber.", "Rising purple = workflow getting slower (test suite growth, cache misses). Rising amber = runner capacity bottleneck. The two series share the Y-axis but are NOT added together."],
             ["Outcome Breakdown", "Donut chart of run conclusions over the last 60 runs: success, failure, cancelled, skipped, timed_out.", "A large failure or timed_out slice needs immediate attention. Cancelled runs often indicate force-pushes interrupting in-flight runs."],
             ["Run Frequency", "Bar chart of runs triggered per calendar day over the last 14 days.", "Gaps are expected on holidays. Unusual spikes may indicate retry storms, misconfigured cron schedules, or a flood of PRs."],
           ]}

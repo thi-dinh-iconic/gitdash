@@ -436,6 +436,8 @@ export async function listWorkflowRuns(
     const completedAt = rawCompletedAt
       ? new Date(rawCompletedAt).getTime()
       : r.status === "completed" ? new Date(r.updated_at).getTime() : null;
+    // duration_ms = pure execution time (first job started → completed), excluding queue wait.
+    // Falls back to created_at if run_started_at is missing so we always have a value.
     const duration_ms =
       r.status === "completed" && completedAt ? completedAt - startedAt : undefined;
     const queue_wait_ms = r.run_started_at
