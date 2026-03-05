@@ -307,7 +307,6 @@ export default function AlertsPage() {
   const { data, isLoading, mutate } = useSWR<AlertsResponse>(
     isStandalone ? null : "/api/alerts?events=1",
     fetcher<AlertsResponse>,
-    { revalidateOnFocus: false }
   );
 
   async function handleToggle(id: number, enabled: boolean) {

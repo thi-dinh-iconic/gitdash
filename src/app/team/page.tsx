@@ -174,7 +174,6 @@ export default function TeamInsightsPage() {
   const { data, error, isLoading } = useSWR<RepoContributorsResponse>(
     apiUrl,
     fetcher<RepoContributorsResponse>,
-    { revalidateOnFocus: false },
   );
 
   const totalMerged = data?.contributors.reduce((s, c) => s + c.prs_merged, 0) ?? 0;

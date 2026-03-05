@@ -3,7 +3,7 @@ import { getTokenFromSession } from "@/lib/session";
 import { listWorkflowRuns } from "@/lib/github";
 import { validateOwner, validateRepo, validateId, validatePerPage, safeError } from "@/lib/validation";
 
-const CACHE_TTL = 30;
+const CACHE_TTL = 120; // 2 min — runs update infrequently; 30s caused excessive GitHub API calls
 
 export async function GET(req: NextRequest) {
   const token = await getTokenFromSession();
@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
       perPageResult.data
     );
     return NextResponse.json(runs, {
-      headers: { "Cache-Control": `private, s-maxage=${CACHE_TTL}, stale-while-revalidate=60` },
+      headers: { "Cache-Control": `private, s-maxage=${CACHE_TTL}, stale-while-revalidate=300` },
     });
   } catch (e) {
     return safeError(e, "Failed to fetch workflow runs");

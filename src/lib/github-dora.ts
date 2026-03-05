@@ -15,7 +15,7 @@ import { calculateRepoDora } from "@/lib/dora";
 import type { RepoDoraSummary, PrInput, PrDetailInput, ReleaseInput } from "@/lib/dora";
 
 const DETAIL_LIMIT = 20;
-const BATCH_SIZE = 5;
+const BATCH_SIZE = 10;
 
 export async function getRepoDoraSummary(
   token: string,

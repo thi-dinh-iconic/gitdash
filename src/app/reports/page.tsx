@@ -218,10 +218,10 @@ export default function ReportsPage() {
     : null;
 
   const { data: dailyData, isLoading: dailyLoading, error: dailyError } = useSWR<TrendsResponse>(
-    dailyKey, fetcher<TrendsResponse>, { revalidateOnFocus: false }
+    dailyKey, fetcher<TrendsResponse>
   );
   const { data: quarterlyData, isLoading: quarterlyLoading } = useSWR<TrendsResponse>(
-    quarterlyKey, fetcher<TrendsResponse>, { revalidateOnFocus: false }
+    quarterlyKey, fetcher<TrendsResponse>
   );
 
   const { trigger: runSync, isMutating: syncing } = useSWRMutation(

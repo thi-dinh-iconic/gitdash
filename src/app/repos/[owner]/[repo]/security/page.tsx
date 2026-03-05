@@ -397,7 +397,6 @@ export default function SecurityPage() {
   const { data, error, isLoading } = useSWR<SecurityScanResponse>(
     flags.securityScan ? `/api/github/security-scan?owner=${owner}&repo=${repo}` : null,
     fetcher<SecurityScanResponse>,
-    { revalidateOnFocus: false }
   );
 
   return (

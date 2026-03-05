@@ -39,7 +39,6 @@ export default function OrgDashboardPage({
   const { data, error, isLoading } = useSWR<OrgOverviewResponse>(
     `/api/github/org-overview?org=${encodeURIComponent(orgName)}`,
     fetcher<OrgOverviewResponse>,
-    { revalidateOnFocus: false }
   );
 
   return (

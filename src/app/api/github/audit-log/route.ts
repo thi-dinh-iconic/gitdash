@@ -3,7 +3,7 @@ import { getTokenFromSession } from "@/lib/session";
 import { listWorkflowFileCommits } from "@/lib/github";
 import { validateOwner, validateRepo, validatePerPage, safeError } from "@/lib/validation";
 
-const CACHE_TTL = 120;
+const CACHE_TTL = 300; // 5 min
 
 export async function GET(req: NextRequest) {
   const token = await getTokenFromSession();

@@ -4,7 +4,7 @@ import { getRepoSummary } from "@/lib/github";
 import { validateOwner, validateRepo, safeError } from "@/lib/validation";
 
 // Short TTL — this is per-repo and called lazily as rows enter viewport
-const CACHE_TTL = 60;
+const CACHE_TTL = 300; // 5 min
 
 export async function GET(req: NextRequest) {
   const token = await getTokenFromSession();
@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
   try {
     const summary = await getRepoSummary(token, ownerResult.data, repoResult.data);
     return NextResponse.json(summary, {
-      headers: { "Cache-Control": `private, s-maxage=${CACHE_TTL}, stale-while-revalidate=120` },
+      headers: { "Cache-Control": `private, s-maxage=${CACHE_TTL}, stale-while-revalidate=600` },
     });
   } catch (e) {
     return safeError(e, "Failed to fetch repo summary");

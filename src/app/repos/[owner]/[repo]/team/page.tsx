@@ -333,20 +333,17 @@ export default function TeamAnalyticsPage() {
   const { data, error, isLoading } = useSWR<TeamStatsResponse>(
     `/api/github/team-stats?owner=${owner}&repo=${repo}&per_page=100`,
     fetcher<TeamStatsResponse>,
-    { revalidateOnFocus: false }
   );
 
   const { data: contribData, isLoading: contribLoading } = useSWR<RepoContributorsResponse>(
     `/api/github/repo-contributors?owner=${owner}&repo=${repo}`,
     fetcher<RepoContributorsResponse>,
-    { revalidateOnFocus: false }
   );
 
   // Bus factor — skipped when feature disabled
   const { data: busData, isLoading: busLoading } = useSWR<BusFactorResponse>(
     flags.busFactor ? `/api/github/bus-factor?owner=${owner}&repo=${repo}` : null,
     fetcher<BusFactorResponse>,
-    { revalidateOnFocus: false }
   );
 
   return (

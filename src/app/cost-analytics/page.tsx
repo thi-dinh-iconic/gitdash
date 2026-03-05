@@ -252,7 +252,6 @@ export default function CostAnalyticsPage() {
   const { data, error, isLoading } = useSWR<CostAnalysisResponse>(
     key,
     fetcher<CostAnalysisResponse>,
-    { revalidateOnFocus: false }
   );
 
   const isPermissionError = error instanceof FetchError && error.status === 403;

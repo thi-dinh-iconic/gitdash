@@ -58,7 +58,7 @@ export async function GET(req: NextRequest) {
 
     // 3. Fetch workflow count + summary for each repo in parallel (batched 5 at a time)
     const octokit = getOctokit(token);
-    const BATCH = 5;
+    const BATCH = 10;
     const results: OrgRepoSummary[] = [];
 
     for (let i = 0; i < topRepos.length; i += BATCH) {

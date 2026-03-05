@@ -4,7 +4,7 @@ import { validateOwner, validateRepo, safeError } from "@/lib/validation";
 import { getOctokit } from "@/lib/github";
 
 const CACHE_TTL = 300; // 5 minutes
-const BATCH_SIZE = 5;
+const BATCH_SIZE = 10;
 
 // ── Response types ────────────────────────────────────────────────────────────
 

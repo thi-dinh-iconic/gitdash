@@ -264,7 +264,6 @@ export default function ContributorProfilePage() {
       ? `/api/github/contributor-profile?owner=${owner}&login=${login}`
       : null,
     fetcher<ContributorProfileResponse>,
-    { revalidateOnFocus: false }
   );
 
   if (!owner) {

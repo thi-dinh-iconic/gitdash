@@ -35,7 +35,8 @@ export function SWRProvider({ children }: { children: React.ReactNode }) {
       value={{
         revalidateOnFocus: false,
         revalidateOnReconnect: false,
-        dedupingInterval: 300_000,
+        dedupingInterval: 600_000,   // 10 min — dedup across all components on the same URL
+        keepPreviousData: true,       // show stale data instantly while revalidating (no loading flash)
         errorRetryCount: 2,
         onError(err: unknown) {
           // If any API call returns 401 (session expired / missing), redirect to the
