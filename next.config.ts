@@ -51,6 +51,7 @@ const nextConfig: NextConfig = {
               // API calls go to GitHub; OAuth redirect goes to github.com
               "connect-src 'self' https://api.github.com https://github.com",
               "font-src 'self' data:",
+              "media-src 'self'",
               // Completely deny framing
               "frame-ancestors 'none'",
               "base-uri 'self'",
