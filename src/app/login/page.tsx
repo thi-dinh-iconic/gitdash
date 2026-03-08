@@ -93,7 +93,7 @@ function LoginContent() {
             </div>
             <div className="rounded-xl overflow-hidden border border-slate-800 shadow-2xl shadow-violet-500/10 bg-slate-900">
               <video
-                src="https://github.com/user-attachments/assets/e9228cb1-3287-456c-b4f7-e2e351f98beb"
+                src="/videos/intro.mp4"
                 autoPlay
                 loop
                 muted
