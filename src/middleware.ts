@@ -14,6 +14,12 @@ const TEAM_PUBLIC = ["/login", "/api/auth/login", "/api/auth/callback"];
 export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // Always allow public paths first — kubelet probes and static assets must
+  // never be redirected (they carry no x-forwarded-proto / cookie).
+  if (ALWAYS_PUBLIC.some((p) => pathname.startsWith(p))) {
+    return NextResponse.next();
+  }
+
   // MED-003: Redirect HTTP → HTTPS in production (trust x-forwarded-proto from load balancer)
   if (process.env.NODE_ENV === "production") {
     const proto = req.headers.get("x-forwarded-proto");
@@ -22,11 +28,6 @@ export async function middleware(req: NextRequest) {
       httpsUrl.protocol = "https:";
       return NextResponse.redirect(httpsUrl, { status: 301 });
     }
-  }
-
-  // Always allow Next.js internals
-  if (ALWAYS_PUBLIC.some((p) => pathname.startsWith(p))) {
-    return NextResponse.next();
   }
 
   if (isStandaloneMode()) {
