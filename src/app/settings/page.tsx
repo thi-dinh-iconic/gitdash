@@ -7,7 +7,7 @@ import { Breadcrumb } from "@/components/Sidebar";
 import type { FeatureFlags } from "@/lib/feature-flags";
 import {
   CheckCircle, AlertCircle, LogOut, Key, Eye, EyeOff,
-  ToggleLeft, ToggleRight, Zap, Shield, Info,
+  ToggleLeft, ToggleRight, Zap, Shield,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 

@@ -63,6 +63,7 @@ export function buildPayload(
  * API. Server-side we record the event and return ok — the client polls
  * alert_events and shows the browser notification.
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 export async function deliverBrowser(_payload: AlertPayload): Promise<DeliveryResult> {
   return { ok: true };
 }

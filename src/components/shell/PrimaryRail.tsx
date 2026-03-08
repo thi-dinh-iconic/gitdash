@@ -17,14 +17,6 @@ import { useAuth } from "@/components/AuthProvider";
 import { cn } from "@/lib/utils";
 import { PRIMARY_NAV } from "./nav-config";
 
-// ── Active route check ────────────────────────────────────────────────────────
-
-function useIsActive(href: string): boolean {
-  const path = usePathname();
-  if (href === "/") return path === "/";
-  return path.startsWith(href);
-}
-
 // ── Single rail icon button ───────────────────────────────────────────────────
 
 function RailIcon({

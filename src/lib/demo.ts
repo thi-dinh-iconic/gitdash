@@ -76,15 +76,12 @@ export const DEMO_SUMMARIES: Record<string, RepoSummary> = {
 
 export function makeDemoRuns(repoFullName: string, count = 50): WorkflowRun[] {
   const runs: WorkflowRun[] = [];
-  let consecutiveFailures = 0;
 
   for (let i = 0; i < count; i++) {
     const isRecent = i < 5;
     // Inject a failure cluster around index 8-12
     const forceFailure = i >= 8 && i <= 11;
     const conclusion = forceFailure ? "failure" : Math.random() > 0.08 ? "success" : "failure";
-    if (conclusion === "failure") consecutiveFailures++;
-    else consecutiveFailures = 0;
 
     const durationMs = Math.round(120_000 + (Math.random() - 0.4) * 60_000);
     const queueMs = Math.round(5_000 + Math.random() * 15_000);

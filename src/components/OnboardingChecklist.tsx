@@ -11,7 +11,7 @@
  *   5. Alerts configured (optional)
  */
 
-import { useState, useEffect } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { CheckCircle2, Circle, ChevronRight, AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
@@ -261,9 +261,14 @@ export function CopyBlock({ label, content, className }: { label: string; conten
 
 // ── Suppress hydration mismatch for localStorage reads ───────────────────────
 
+const emptySubscribe = () => () => {};
+
 export function ClientOnly({ children }: { children: React.ReactNode }) {
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,   // client
+    () => false,  // server
+  );
   if (!mounted) return null;
   return <>{children}</>;
 }

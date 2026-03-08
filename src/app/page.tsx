@@ -12,12 +12,12 @@ import { useAuth } from "@/components/AuthProvider";
 import { formatDistanceToNow } from "date-fns";
 import {
   Search, Lock, Unlock, AlertCircle, ChevronRight, ChevronLeft,
-  RefreshCw, Building2, User, ChevronDown, X, GitCommit,
+  RefreshCw, Building2, User, ChevronDown, X,
   AlertTriangle, Keyboard,
 } from "lucide-react";
 import { cn, fuzzyMatch, highlightSegments } from "@/lib/utils";
 import { RunHistoryBars, TrendSparkline, StatusBadge, HealthBadge } from "@/components/WorkflowMetrics";
-import { MissionControl, QuickActions, WatchlistPin, useWatchlist } from "@/components/MissionControl";
+import { MissionControl, QuickActions } from "@/components/MissionControl";
 
 // ── Keyboard shortcuts modal ───────────────────────────────────────────────────
 const SHORTCUTS = [

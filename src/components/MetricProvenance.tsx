@@ -157,7 +157,12 @@ export interface FreshnessBannerProps {
   className?: string;
 }
 
+// Captured once at module load — stable across re-renders within the same page session.
+const MODULE_NOW = Date.now();
+
 export function FreshnessBanner({ lastSyncedAt, staleAfterHours = 4, className }: FreshnessBannerProps) {
+  const now = MODULE_NOW;
+
   if (!lastSyncedAt) {
     return (
       <div className={cn("flex items-center gap-2 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2", className)}>
@@ -168,11 +173,11 @@ export function FreshnessBanner({ lastSyncedAt, staleAfterHours = 4, className }
   }
 
   const staleCutoff = new Date(lastSyncedAt).getTime() + staleAfterHours * 3_600_000;
-  const isStale = Date.now() > staleCutoff;
+  const isStale = now > staleCutoff;
 
   if (!isStale) return null;
 
-  const ageHours = Math.round((Date.now() - new Date(lastSyncedAt).getTime()) / 3_600_000);
+  const ageHours = Math.round((now - new Date(lastSyncedAt).getTime()) / 3_600_000);
 
   return (
     <div className={cn("flex items-center gap-2 text-xs text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2", className)}>

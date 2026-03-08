@@ -70,7 +70,7 @@ interface MissionControlProps {
   className?: string;
 }
 
-export function MissionControl({ org, className }: MissionControlProps) {
+export function MissionControl({ className }: MissionControlProps) {
   const { data: alertsData } = useSWR<AlertsResponse>(
     "/api/alerts?events=1",
     fetcher<AlertsResponse>,
@@ -183,11 +183,10 @@ export function MissionControl({ org, className }: MissionControlProps) {
 // ── Watchlist pin button ───────────────────────────────────────────────────────
 
 export function WatchlistPin({
-  repo,
   isPinned,
   onToggle,
 }: {
-  repo: string;
+  repo?: string;
   isPinned: boolean;
   onToggle: () => void;
 }) {

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useSyncExternalStore } from "react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import useSWR from "swr";
@@ -31,16 +31,18 @@ export function useOrgs() {
 // ── Watchlist ─────────────────────────────────────────────────────────────────
 
 const WATCHLIST_KEY = "gitdash:watchlist";
+const emptySubscribe = () => () => {};
 
 function WatchlistSection({ onClose }: { onClose?: () => void }) {
-  const [pinned, setPinned] = useState<string[]>([]);
-
-  // Read from localStorage after mount (avoids SSR mismatch)
-  useEffect(() => {
-    try {
-      setPinned(JSON.parse(localStorage.getItem(WATCHLIST_KEY) ?? "[]"));
-    } catch { /* ignore */ }
-  }, []);
+  const pinned = useSyncExternalStore(
+    emptySubscribe,
+    () => {
+      try {
+        return JSON.parse(localStorage.getItem(WATCHLIST_KEY) ?? "[]") as string[];
+      } catch { return []; }
+    },
+    () => [] as string[],
+  );
 
   return (
     <div className="mt-5">
