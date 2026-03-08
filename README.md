@@ -1,60 +1,170 @@
-# GitDash
+<p align="center">
+  <img src="public/logo.png" alt="GitDash Logo" width="120" />
+</p>
 
-**The Engineering Analytics Platform for High-Performing Teams.**
+<h1 align="center">GitDash</h1>
 
-GitDash is a secure, self-hosted dashboard that transforms GitHub and GitHub Actions data into actionable engineering intelligence. Built for tech leads, engineering managers, and individual contributors, it provides deep visibility into repository health, delivery velocity, team insights, and CI/CD costs.
+<p align="center">
+  <strong>Self-Hosted GitHub Actions Metrics Dashboard</strong><br />
+  DORA metrics, workflow analytics, team insights, cost tracking — all in one place.
+</p>
 
-![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)
-![React](https://img.shields.io/badge/React-19-149eca?logo=react)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-blue?logo=typescript)
-![Tailwind](https://img.shields.io/badge/Tailwind-4-38bdf8?logo=tailwindcss)
+<p align="center">
+  <a href="#-intro-video">Video</a> &nbsp;&bull;&nbsp;
+  <a href="#-live-demo">Demo</a> &nbsp;&bull;&nbsp;
+  <a href="#-key-capabilities">Features</a> &nbsp;&bull;&nbsp;
+  <a href="#-quick-start">Quick Start</a> &nbsp;&bull;&nbsp;
+  <a href="#-deployment">Deployment</a> &nbsp;&bull;&nbsp;
+  <a href="#-documentation">Docs</a>
+</p>
+
+<p align="center">
+  <img src="https://img.shields.io/badge/Next.js-16-black?logo=next.js" alt="Next.js" />
+  <img src="https://img.shields.io/badge/React-19-149eca?logo=react" alt="React" />
+  <img src="https://img.shields.io/badge/TypeScript-5-blue?logo=typescript" alt="TypeScript" />
+  <img src="https://img.shields.io/badge/Tailwind-4-38bdf8?logo=tailwindcss" alt="Tailwind" />
+  <img src="https://img.shields.io/github/license/dinhdobathi1992/gitdash?color=green" alt="License" />
+  <img src="https://img.shields.io/github/v/release/dinhdobathi1992/gitdash?color=orange" alt="Release" />
+</p>
+
+---
+
+## 🎬 Intro Video
+
+Get a quick overview of what GitDash can do:
+
+https://github.com/user-attachments/assets/GitDash__GitHub_Actions.mp4
+
+<video src="walkthrough-output/GitDash__GitHub_Actions.mp4" width="100%" controls></video>
+
+---
+
+## 🖥 Live Demo
+
+Watch a full walkthrough of GitDash in action — navigating repos, exploring DORA metrics, workflow analytics, team insights, cost tracking, and more:
+
+https://github.com/user-attachments/assets/gitdash-walkthrough.webm
+
+<video src="walkthrough-output/gitdash-walkthrough.webm" width="100%" controls></video>
+
+---
 
 ## 🚀 Key Capabilities
 
-- **Industry-Standard DORA Metrics:** Track Deployment Frequency, Lead Time for Changes, Change Failure Rate, and MTTR derived directly from real PR and release data.
-- **Precision Drill-Downs:** Actionable charts including PR Cycle Time Breakdown, PR Size vs. Velocity scatter plots, Throughput Trends, and Workflow Stability.
-- **Workflow Intelligence:** Deep-dive into success rates, queue wait times, run duration trends, and cost estimation across all your GitHub Actions.
-- **Team & Contributor Insights:** Uncover CI delivery metrics and reviewer load balances across teams. _(Coming Soon: Full Contributor Profiles with 52-week activity heatmaps and PR lifecycle funnels)._
-- **Cost Analytics:** Track your GitHub Actions spend month-over-month to identify expensive workflows and optimize your CI budget (Requires Enhanced Billing).
-- **Enterprise-Grade Security:** AES-256-GCM encrypted sessions, zero browser exposure for tokens, and native support for static analysis of your workflow configurations.
-- **DB-Backed Reporting (Optional):** Persist historical data beyond GitHub's 90-day retention and evaluate advanced Alerting rules.
+| Capability | Description |
+| --- | --- |
+| **DORA Metrics** | Track Deployment Frequency, Lead Time for Changes, Change Failure Rate, and MTTR derived directly from real PR and release data. |
+| **Precision Drill-Downs** | PR Cycle Time Breakdown, PR Size vs. Velocity scatter plots, Throughput Trends, and Workflow Stability charts. |
+| **Workflow Intelligence** | Deep-dive into success rates, queue wait times, run duration trends, and cost estimation across all GitHub Actions. |
+| **Team & Contributor Insights** | CI delivery metrics, reviewer load balances, 52-week activity heatmaps, and PR lifecycle funnels. |
+| **Cost Analytics** | Track GitHub Actions spend month-over-month to identify expensive workflows and optimize CI budgets. |
+| **Enterprise-Grade Security** | AES-256-GCM encrypted sessions, zero browser token exposure, and workflow configuration static analysis. |
+| **DB-Backed Reporting** | Persist historical data beyond GitHub's 90-day retention and evaluate advanced alerting rules. |
 
-Screenshots: [`docs/screenshots/`](docs/screenshots)
+---
 
-## Architecture (High-Level)
+## 📸 Screenshots
 
-GitDash is a Next.js App Router app that proxies authenticated requests to GitHub APIs.
+<details>
+<summary><strong>Repository Dashboard</strong> — browse all repositories with health indicators</summary>
+<br />
+<p align="center">
+  <img src="public/screenshots/00-repos.png" alt="Repositories" width="800" />
+</p>
+</details>
 
-- Browser calls internal routes under `/api/*`
-- Server reads token from encrypted session cookie (`iron-session`)
-- Server calls GitHub REST APIs with Octokit/fetch
-- Optional DB routes persist and query historical workflow runs
+<details>
+<summary><strong>Repository Overview & DORA Scorecard</strong> — health cards, PR cycle time, workflow trends</summary>
+<br />
+<p align="center">
+  <img src="public/screenshots/08-repo-overview.png" alt="Repository Overview" width="800" />
+</p>
+</details>
 
-Key code entry points:
+<details>
+<summary><strong>Workflow Analytics — Overview & Performance</strong> — run stats, job breakdowns, step timing</summary>
+<br />
+<p align="center">
+  <img src="public/screenshots/01-overview.png" alt="Workflow Overview" width="800" />
+</p>
+<p align="center">
+  <img src="public/screenshots/03-performance-jobs.png" alt="Performance — Jobs" width="800" />
+</p>
+</details>
 
-- `src/proxy.ts` - auth gating + production HTTPS redirect
-- `src/lib/session.ts` - encrypted session cookie configuration
-- `src/lib/mode.ts` - auth mode selection (`standalone` vs `organization`)
-- `src/app/api/github/*` - GitHub data endpoints
-- `src/app/api/db/*` + `src/lib/db.ts` - optional historical DB layer
+<details>
+<summary><strong>Workflow Analytics — Reliability & Triggers</strong> — failure trends, flaky detection, trigger distribution</summary>
+<br />
+<p align="center">
+  <img src="public/screenshots/05-reliability.png" alt="Reliability" width="800" />
+</p>
+<p align="center">
+  <img src="public/screenshots/06-triggers.png" alt="Triggers" width="800" />
+</p>
+</details>
 
-## Authentication Modes
+<details>
+<summary><strong>Audit Trail & Security Scan</strong> — workflow change log, YAML security analysis</summary>
+<br />
+<p align="center">
+  <img src="public/screenshots/09-audit.png" alt="Audit Trail" width="800" />
+</p>
+<p align="center">
+  <img src="public/screenshots/10-security.png" alt="Security Scan" width="800" />
+</p>
+</details>
 
-| Mode | Best for | Login flow |
-| --- | --- | --- |
-| `standalone` (default) | Individual/self-hosted use | User enters PAT at `/setup`, token stored in encrypted HttpOnly session cookie |
-| `organization` | Shared team deployment | GitHub OAuth via `/login` and `/api/auth/callback`, token stored in encrypted session cookie |
+<details>
+<summary><strong>Team Insights & Contributor Profiles</strong> — delivery metrics, reviewer load, activity heatmaps</summary>
+<br />
+<p align="center">
+  <img src="public/screenshots/12-team-insights.png" alt="Team Insights" width="800" />
+</p>
+<p align="center">
+  <img src="public/screenshots/13-contributor.png" alt="Contributor Profile" width="800" />
+</p>
+</details>
 
-Mode is controlled by `MODE` env var.
+<details>
+<summary><strong>Cost Analytics</strong> — billing breakdown by workflow and runner type</summary>
+<br />
+<p align="center">
+  <img src="public/screenshots/cost-analytics.png" alt="Cost Analytics" width="800" />
+</p>
+</details>
 
-## Quick Start (Local)
+<details>
+<summary><strong>Reports, Alerts & Settings</strong> — historical trends, alert rules, configuration</summary>
+<br />
+<p align="center">
+  <img src="public/screenshots/14-reports.png" alt="Reports" width="800" />
+</p>
+<p align="center">
+  <img src="public/screenshots/15-alerts.png" alt="Alerts" width="800" />
+</p>
+<p align="center">
+  <img src="public/screenshots/16-settings.png" alt="Settings" width="800" />
+</p>
+</details>
 
-### 1. Prerequisites
+<details>
+<summary><strong>Organization Overview</strong> — aggregated org-level metrics</summary>
+<br />
+<p align="center">
+  <img src="public/screenshots/17-org-overview.png" alt="Organization Overview" width="800" />
+</p>
+</details>
+
+---
+
+## ⚡ Quick Start
+
+### Prerequisites
 
 - Node.js 20+
 - npm
 
-### 2. Clone and install
+### 1. Clone and install
 
 ```bash
 git clone https://github.com/dinhdobathi1992/gitdash.git
@@ -62,13 +172,13 @@ cd gitdash
 npm ci
 ```
 
-### 3. Configure environment
+### 2. Configure environment
 
 ```bash
 cp .env.local.example .env.local
 ```
 
-Set at least:
+Set at minimum:
 
 ```env
 SESSION_SECRET=replace_with_a_random_32+_char_secret
@@ -82,88 +192,88 @@ Generate a secure secret:
 openssl rand -hex 32
 ```
 
-### 4. Start
+### 3. Start the dev server
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000). In `standalone` mode you'll be redirected to `/setup`; in `organization` mode to `/login`.
 
-- `standalone` mode redirects to `/setup`
-- `organization` mode redirects to `/login`
+---
 
-## Organization Mode Setup (OAuth)
+## 🔐 Authentication Modes
 
-If `MODE=organization`, also set:
+| Mode | Best for | Login flow |
+| --- | --- | --- |
+| **`standalone`** (default) | Individual / self-hosted use | User enters PAT at `/setup`, token stored in encrypted HttpOnly session cookie |
+| **`organization`** | Shared team deployment | GitHub OAuth via `/login` and `/api/auth/callback`, token stored in encrypted session cookie |
+
+Mode is controlled by the `MODE` environment variable.
+
+### Organization Mode Setup (OAuth)
+
+Set the following additional variables:
 
 ```env
 GITHUB_CLIENT_ID=your_oauth_app_client_id
 GITHUB_CLIENT_SECRET=your_oauth_app_client_secret
 ```
 
-Create GitHub OAuth App:
+Create a GitHub OAuth App with:
 
-- Homepage URL: `http://localhost:3000`
-- Callback URL: `http://localhost:3000/api/auth/callback`
+- **Homepage URL:** `http://localhost:3000`
+- **Callback URL:** `http://localhost:3000/api/auth/callback`
 
-## Token Scope Guidance
+### Token Scope Guidance
 
-### Standalone PAT (recommended minimum)
-
-- `repo`
-- `workflow`
-- `read:org`
-- `read:user`
+**Standalone PAT (recommended minimum):** `repo`, `workflow`, `read:org`, `read:user`
 
 For tighter access, prefer a fine-grained PAT scoped to only the repositories and read permissions you need.
 
-### Cost Analytics note
+> **Cost Analytics note:** `/api/github/billing/cost-analysis` uses GitHub Enhanced Billing APIs. Some org/account combinations require fine-grained PAT permissions (e.g. org Administration read).
 
-`/api/github/billing/cost-analysis` uses GitHub Enhanced Billing APIs. Some org/account combinations require fine-grained PAT permissions (for example org Administration read).
+---
 
-## Optional: Historical DB + Webhooks
+## 🏗 Architecture
 
-GitDash works without a database for live GitHub analytics.
+GitDash is a **Next.js App Router** application that proxies authenticated requests to GitHub APIs.
 
-Add a Postgres/Neon database to unlock historical persistence and reporting features:
+```
+Browser  ──▶  /api/*  ──▶  Server reads token from encrypted session cookie (iron-session)
+                           ──▶  GitHub REST APIs via Octokit / fetch
+                           ──▶  Optional: DB routes persist & query historical workflow runs
+```
 
-- `DATABASE_URL` enables `/api/db/*` and alert rule storage
-- `/reports` relies on DB data and is available in organization mode
-- `/api/webhooks/github` can upsert workflow runs from GitHub webhooks
+**Key code entry points:**
 
-Optional webhook hardening:
+| Path | Purpose |
+| --- | --- |
+| `src/proxy.ts` | Auth gating + production HTTPS redirect |
+| `src/lib/session.ts` | Encrypted session cookie configuration |
+| `src/lib/mode.ts` | Auth mode selection (`standalone` vs `organization`) |
+| `src/app/api/github/*` | GitHub data endpoints |
+| `src/app/api/db/*` + `src/lib/db.ts` | Optional historical DB layer |
 
-- Set `GITHUB_WEBHOOK_SECRET`
-- Configure GitHub webhook event: `workflow_run`
+---
 
-## Deployment
+## 🚢 Deployment
 
 ### Docker Compose
 
 ```bash
 cp .env.local.example .env.local
-# edit .env.local
+# edit .env.local with your values
 docker compose up --build -d
 ```
 
-Stop:
-
 ```bash
-docker compose down
+docker compose down   # to stop
 ```
 
-### Docker image behavior
-
-- Multi-stage build (`deps` -> `builder` -> `runner`)
-- Runtime user is non-root (`nextjs`, uid 1001)
-- `DOCKER_BUILD=1` enables Next standalone output during image build
+**Docker image behavior:** multi-stage build (`deps` → `builder` → `runner`), non-root runtime user (`nextjs`, uid 1001), `DOCKER_BUILD=1` enables Next standalone output during build.
 
 ### Kubernetes (Helm)
-
-Helm chart is in `helm/gitdash/`.
-
-Typical install:
 
 ```bash
 helm upgrade --install gitdash ./helm/gitdash -n gitdash --create-namespace
@@ -171,91 +281,165 @@ helm upgrade --install gitdash ./helm/gitdash -n gitdash --create-namespace
 
 Adjust `helm/gitdash/values.yaml` for mode, ingress, and secrets.
 
-## Environment Variables
+---
+
+## 🗄 Optional: Historical DB + Webhooks
+
+GitDash works without a database for live GitHub analytics. Add a **Postgres/Neon** database to unlock historical persistence and reporting:
+
+- `DATABASE_URL` enables `/api/db/*` and alert rule storage
+- `/reports` relies on DB data (available in organization mode)
+- `/api/webhooks/github` upserts workflow runs from GitHub webhooks
+
+Optional webhook hardening: set `GITHUB_WEBHOOK_SECRET` and configure the `workflow_run` event in GitHub.
+
+---
+
+## ⚙️ Environment Variables
 
 | Variable | Required | Description |
 | --- | --- | --- |
-| `SESSION_SECRET` | Yes | Session encryption key. Must be >= 32 chars in production. |
-| `MODE` | No | `standalone` (default) or `organization` (aliases: `org`, `team`). |
-| `NEXT_PUBLIC_APP_URL` | Recommended | Public app URL, used by OAuth/callback flows. |
-| `GITHUB_CLIENT_ID` | Org mode only | GitHub OAuth App client id. |
-| `GITHUB_CLIENT_SECRET` | Org mode only | GitHub OAuth App client secret. |
-| `DATABASE_URL` | Optional | Enables historical DB sync/trends/alerts persistence. |
-| `GITHUB_WEBHOOK_SECRET` | Optional | Enables signature verification for `/api/webhooks/github`. |
-| `GITHUB_TOKEN` | Optional fallback | Used only when no session token is provided to server helpers. |
+| `SESSION_SECRET` | Yes | Session encryption key (>= 32 chars in production) |
+| `MODE` | No | `standalone` (default) or `organization` (aliases: `org`, `team`) |
+| `NEXT_PUBLIC_APP_URL` | Recommended | Public app URL for OAuth/callback flows |
+| `GITHUB_CLIENT_ID` | Org mode | GitHub OAuth App client ID |
+| `GITHUB_CLIENT_SECRET` | Org mode | GitHub OAuth App client secret |
+| `DATABASE_URL` | Optional | Enables historical DB sync, trends, and alerts |
+| `GITHUB_WEBHOOK_SECRET` | Optional | Signature verification for `/api/webhooks/github` |
+| `GITHUB_TOKEN` | Optional | Fallback when no session token is available |
 
-## Main Routes
+---
 
-UI pages:
+## 🗺 Main Routes
 
-- `/` repositories
-- `/repos/[owner]/[repo]` repository overview + links to audit/security/team
-- `/repos/[owner]/[repo]/workflows/[workflow_id]` workflow analytics tabs
-- `/team`, `/cost-analytics`, `/reports`, `/alerts`, `/settings`, `/docs`
+### UI Pages
 
-API groups:
+| Route | Description |
+| --- | --- |
+| `/` | Repository dashboard |
+| `/repos/[owner]/[repo]` | Repository overview + links to audit, security, team |
+| `/repos/[owner]/[repo]/workflows/[id]` | Workflow analytics tabs |
+| `/team` | Team insights |
+| `/cost-analytics` | Cost analytics |
+| `/reports` | Historical reports |
+| `/alerts` | Alert rules & events |
+| `/settings` | Application settings |
+| `/docs` | Built-in documentation |
 
-- `/api/auth/*` session setup/login/logout/me
-- `/api/github/*` GitHub data + analytics endpoints
-- `/api/db/*` optional historical sync and trend endpoints
-- `/api/alerts` alert-rule CRUD + events
-- `/api/webhooks/github` workflow webhook ingest
+### API Groups
 
-## Tech Stack
+| Prefix | Purpose |
+| --- | --- |
+| `/api/auth/*` | Session setup, login, logout, whoami |
+| `/api/github/*` | GitHub data + analytics endpoints |
+| `/api/db/*` | Optional historical sync and trend endpoints |
+| `/api/alerts` | Alert-rule CRUD + events |
+| `/api/webhooks/github` | Workflow webhook ingest |
 
-- Next.js 16 (App Router)
-- React 19 + TypeScript (strict)
-- Tailwind CSS v4
-- SWR for client data fetching
-- Recharts for visualizations
-- Octokit + GitHub REST API
-- iron-session for encrypted cookies
-- Neon Postgres client (`@neondatabase/serverless`) for optional DB features
+---
 
-## Project Layout
+## 🛠 Tech Stack
 
-```text
+| Layer | Technology |
+| --- | --- |
+| Framework | Next.js 16 (App Router) |
+| UI | React 19, TypeScript (strict), Tailwind CSS v4 |
+| Data fetching | SWR |
+| Visualizations | Recharts |
+| GitHub integration | Octokit + GitHub REST API |
+| Session management | iron-session (encrypted cookies) |
+| Database (optional) | Neon Postgres (`@neondatabase/serverless`) |
+
+---
+
+## 📁 Project Layout
+
+```
 gitdash/
 ├── src/
-│   ├── app/                 # Pages + route handlers
-│   ├── components/          # UI and shared client components
-│   ├── lib/                 # Core logic (GitHub, DB, sessions, validation)
-│   └── proxy.ts             # Auth/redirect proxy layer
-├── docs/                    # Plans + screenshots
-├── helm/gitdash/            # Helm chart
-├── .github/workflows/       # CI/CD workflows
+│   ├── app/                  # Pages + route handlers
+│   ├── components/           # UI and shared client components
+│   ├── lib/                  # Core logic (GitHub, DB, sessions, validation)
+│   └── proxy.ts              # Auth/redirect proxy layer
+├── walkthrough-output/       # Intro video + demo walkthrough
+├── public/screenshots/       # Application screenshots
+├── docs/                     # Plans & design docs
+├── helm/gitdash/             # Helm chart
+├── .github/workflows/        # CI/CD workflows
 ├── Dockerfile
 └── docker-compose.yml
 ```
 
-## Security Posture (Summary)
+---
 
-- Session cookie is `HttpOnly`, `SameSite=lax`, and `Secure` in production
-- `SESSION_SECRET` is enforced in production (>=32 chars)
-- Auth entry points are rate-limited (`/api/auth/setup`, `/api/auth/login`)
-- OAuth `state` is verified and expires
-- Input validation and safe error handling are centralized in `src/lib/validation.ts`
-- Security headers (CSP, HSTS in prod, X-Frame-Options, etc.) are set in `next.config.ts`
+## 🔒 Security
 
-Detailed history: [`README-SECURITY-ENHANCEMENTS.md`](README-SECURITY-ENHANCEMENTS.md)
+- Session cookie: `HttpOnly`, `SameSite=lax`, `Secure` in production
+- `SESSION_SECRET` enforced >= 32 chars in production
+- Auth entry points rate-limited (`/api/auth/setup`, `/api/auth/login`)
+- OAuth `state` verified and expires
+- Input validation centralized in `src/lib/validation.ts`
+- Security headers (CSP, HSTS, X-Frame-Options) configured in `next.config.ts`
 
-## Developer Commands
+For full details see [`README-SECURITY-ENHANCEMENTS.md`](README-SECURITY-ENHANCEMENTS.md).
+
+---
+
+## 🔄 CI/CD Workflows
+
+| Workflow | Purpose |
+| --- | --- |
+| `ci.yml` | Lint, type-check, build, npm audit, Snyk, CodeQL |
+| `docker.yml` | Multi-arch Docker build and push |
+| `release.yml` | Semver release/tag flow |
+| `vercel.yml` | Production deploy with Vercel CLI |
+
+---
+
+## 🧑‍💻 Developer Commands
 
 ```bash
-npm run dev     # local dev
-npm run build   # production build
-npm run start   # run built app
-npm run lint    # eslint
-npx tsc --noEmit
+npm run dev       # local development server
+npm run build     # production build
+npm run start     # run production build
+npm run lint      # eslint
+npm run test      # run tests
+npx tsc --noEmit  # type-check without emitting
 ```
 
-## CI/CD Workflows
+---
 
-- `ci.yml` - lint, type-check, build, npm audit, Snyk, CodeQL
-- `docker.yml` - multi-arch Docker build and push
-- `release.yml` - semver release/tag flow
-- `vercel.yml` - production deploy with Vercel CLI
+## 📚 Documentation
 
-## Changelog
+GitDash ships with comprehensive **built-in documentation** accessible at the [`/docs`](https://gitdash.vercel.app/docs) route in the running application.
+
+The docs cover:
+
+- **Getting Started** — installation, deployment, configuration
+- **Core Concepts** — authentication modes, security model, data sources
+- **Feature Guides** — detailed walkthroughs for every dashboard section
+- **Metrics Reference** — DORA 4 Keys, PR Cycle Time, Workflow metrics, Team & People metrics, CI & Alert metrics
+- **API Reference** — all available REST endpoints
+- **FAQ & Troubleshooting** — common issues and solutions
+
+> **Tip:** The docs page includes full-text search, tabbed examples, and interactive code blocks.
+
+For the DORA Metrics integration plan and roadmap, see [`docs/DORA-REPO-METRICS-PLAN.md`](docs/DORA-REPO-METRICS-PLAN.md).
+
+---
+
+## 📋 Changelog
 
 See [`CHANGELOG.md`](CHANGELOG.md).
+
+---
+
+## 📄 License
+
+MIT
+
+---
+
+<p align="center">
+  <sub>Made by <a href="https://github.com/dinhdobathi1992">Dinh Do Ba Thi</a></sub>
+</p>

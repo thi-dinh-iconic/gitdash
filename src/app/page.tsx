@@ -17,6 +17,7 @@ import {
 } from "lucide-react";
 import { cn, fuzzyMatch, highlightSegments } from "@/lib/utils";
 import { RunHistoryBars, TrendSparkline, StatusBadge, HealthBadge } from "@/components/WorkflowMetrics";
+import { MissionControl, QuickActions, WatchlistPin, useWatchlist } from "@/components/MissionControl";
 
 // ── Keyboard shortcuts modal ───────────────────────────────────────────────────
 const SHORTCUTS = [
@@ -211,58 +212,55 @@ function RepoRow({
       )}
       onClick={() => router.push(`/repos/${repo.owner}/${repo.name}`)}
     >
-      {/* Repository */}
-      <td className="py-3.5 pl-5 pr-4">
-        <div className="flex items-start gap-2.5">
+      {/* Repository — fixed h-14 so every row is the same height */}
+      <td className="h-14 pl-5 pr-4">
+        <div className="flex items-center gap-2.5 h-full">
           {repo.private
-            ? <Lock className="w-3.5 h-3.5 text-slate-500 shrink-0 mt-0.5" />
-            : <Unlock className="w-3.5 h-3.5 text-slate-500 shrink-0 mt-0.5" />}
-          <div className="min-w-0">
-            <Link
-              href={`/repos/${repo.owner}/${repo.name}`}
-              className="text-sm font-semibold text-white hover:text-violet-300 transition-colors font-mono truncate block"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <span className="text-slate-400">{repo.owner}/</span>
-              <Highlighted text={repo.name} indices={nameIndices} />
-            </Link>
+            ? <Lock className="w-3 h-3 text-slate-600 shrink-0" />
+            : <Unlock className="w-3 h-3 text-slate-700 shrink-0" />}
+          <div className="min-w-0 flex-1">
+            {/* Name + language badge on one line */}
+            <div className="flex items-center gap-2 min-w-0">
+              <Link
+                href={`/repos/${repo.owner}/${repo.name}`}
+                className="text-sm font-semibold text-white hover:text-violet-300 transition-colors font-mono truncate"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <span className="text-slate-500 font-normal">{repo.owner}/</span>
+                <Highlighted text={repo.name} indices={nameIndices} />
+              </Link>
+              {repo.language && (
+                <span className="inline-block px-1.5 py-0.5 text-[10px] font-medium rounded bg-slate-800 text-slate-400 border border-slate-700/60 shrink-0">
+                  {repo.language}
+                </span>
+              )}
+            </div>
 
-            {/* Last commit line */}
-            {summary?.latest_sha ? (
-              <div className="flex items-center gap-1.5 mt-0.5 text-[11px] text-slate-500">
-                <GitCommit className="w-3 h-3 shrink-0" />
-                <span className="font-mono">{summary.latest_sha}</span>
-                {summary.latest_message && (
-                  <span className="truncate max-w-[180px]">{summary.latest_message}</span>
-                )}
-                {summary.latest_actor && (
-                  <span>by {summary.latest_actor}</span>
-                )}
-                {summary.latest_run_at && (
-                  <span>{formatDistanceToNow(new Date(summary.latest_run_at))} ago</span>
-                )}
-              </div>
-            ) : repo.updated_at ? (
-              <p className="text-[11px] text-slate-600 mt-0.5">
-                Updated {formatDistanceToNow(new Date(repo.updated_at))} ago
-              </p>
-            ) : null}
+            {/* Second line — always rendered to lock row height; shows description if available, else last-updated */}
+            <p className="text-[11px] text-slate-500 mt-0.5 truncate max-w-[300px] hidden sm:block">
+              {repo.description
+                ? repo.description
+                : repo.updated_at
+                ? `Updated ${formatDistanceToNow(new Date(repo.updated_at))} ago`
+                : <span className="text-slate-700">No description</span>
+              }
+            </p>
           </div>
         </div>
       </td>
 
       {/* Status */}
-      <td className="py-3.5 px-4 w-36">
+      <td className="h-14 px-4 w-32">
         <StatusBadge summary={summary} />
       </td>
 
       {/* Health */}
-      <td className="py-3.5 px-4 w-36">
+      <td className="h-14 px-4 w-24">
         <HealthBadge summary={summary} />
       </td>
 
-      {/* Run History (10) */}
-      <td className="py-3.5 px-4 w-48">
+      {/* Last 10 runs — hidden on xs */}
+      <td className="h-14 px-4 w-44 hidden sm:table-cell">
         {summary ? (
           <RunHistoryBars runs={summary.recent_runs} />
         ) : (
@@ -274,8 +272,8 @@ function RepoRow({
         )}
       </td>
 
-      {/* Trend (30d) */}
-      <td className="py-3.5 px-4 w-36">
+      {/* 30-day trend — hidden on sm */}
+      <td className="h-14 px-4 w-32 hidden md:table-cell">
         {summary ? (
           <TrendSparkline points={summary.trend_30d} />
         ) : (
@@ -283,15 +281,9 @@ function RepoRow({
         )}
       </td>
 
-      {/* Arrow */}
-      <td className="py-3.5 pr-5 w-10 text-right">
-        <Link
-          href={`/repos/${repo.owner}/${repo.name}`}
-          className="inline-flex text-slate-600 group-hover:text-slate-300 transition-colors"
-          aria-label={`Open ${repo.name}`}
-        >
-          <ChevronRight className="w-4 h-4" />
-        </Link>
+      {/* Chevron */}
+      <td className="h-14 pr-4 w-8 text-right">
+        <ChevronRight className="w-4 h-4 text-slate-700 group-hover:text-slate-300 transition-colors inline-block" />
       </td>
     </tr>
   );
@@ -303,21 +295,21 @@ function TableSkeleton() {
     <tbody>
       {Array.from({ length: 8 }).map((_, i) => (
         <tr key={i} className="border-b border-slate-800">
-          <td className="py-4 pl-5 pr-4">
+          <td className="h-14 pl-5 pr-4">
             <div className="h-4 w-48 rounded skeleton mb-1.5" />
             <div className="h-3 w-64 rounded skeleton" />
           </td>
-          <td className="py-4 px-4"><div className="h-5 w-16 rounded-full skeleton" /></td>
-          <td className="py-4 px-4"><div className="h-5 w-12 rounded skeleton" /></td>
-          <td className="py-4 px-4">
+          <td className="h-14 px-4"><div className="h-5 w-16 rounded-full skeleton" /></td>
+          <td className="h-14 px-4"><div className="h-5 w-12 rounded skeleton" /></td>
+          <td className="h-14 px-4 hidden sm:table-cell">
             <div className="flex items-end gap-0.5 h-6">
               {Array.from({ length: 10 }).map((_, j) => (
                 <div key={j} className="w-2.5 h-full rounded-sm skeleton" />
               ))}
             </div>
           </td>
-          <td className="py-4 px-4"><div className="h-8 w-28 rounded skeleton" /></td>
-          <td className="py-4 pr-5" />
+          <td className="h-14 px-4 hidden md:table-cell"><div className="h-8 w-28 rounded skeleton" /></td>
+          <td className="h-14 pr-4" />
         </tr>
       ))}
     </tbody>
@@ -431,7 +423,7 @@ function HomeContent() {
   const [langFilter, setLangFilter] = useState<string | null>(null);
   const [visFilter, setVisFilter] = useState<VisibilityFilter>("all");
   const [showShortcuts, setShowShortcuts] = useState(false);
-  const PAGE_SIZE = 20;
+  const PAGE_SIZE = 10;
   const [pageState, setPageState] = useState<{ page: number; key: string }>({ page: 1, key: "" });
   const searchRef = useRef<HTMLInputElement>(null);
 
@@ -547,59 +539,62 @@ function HomeContent() {
   const selectedOrg = orgs?.find((o) => o.login === orgParam);
 
   return (
-    <div className="p-8">
+    <div className="p-4 md:p-8">
       {showShortcuts && (
         <KeyboardShortcutsModal onClose={() => setShowShortcuts(false)} />
       )}
 
-      {/* Header */}
-      <div className="flex items-start justify-between mb-6 gap-4 flex-wrap">
-        <div>
-          <div className="flex items-center gap-3 mb-1">
-            {orgParam && selectedOrg ? (
-              <div className="flex items-center gap-2">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={selectedOrg.avatar_url} alt={selectedOrg.login} width={28} height={28} className="w-7 h-7 rounded-lg" />
-                <h1 className="text-2xl font-bold text-white font-mono">{selectedOrg.login}</h1>
-                <span className="px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300 flex items-center gap-1">
-                  <Building2 className="w-3 h-3" /> Organization
-                </span>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                {user && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img src={user.avatar_url} alt={user.login} width={28} height={28} className="w-7 h-7 rounded-full" />
-                )}
-                <div>
-                  <h1 className="text-2xl font-bold text-white">Personal Repos</h1>
-                  {user && <p className="text-xs text-slate-500 font-mono mt-0.5">@{user.login}</p>}
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between mb-5 gap-3 flex-wrap">
+        <div className="flex items-center gap-3 min-w-0">
+          {orgParam && selectedOrg ? (
+            <>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={selectedOrg.avatar_url} alt={selectedOrg.login} width={36} height={36} className="w-9 h-9 rounded-xl ring-1 ring-slate-700 shrink-0" />
+              <div className="min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-xl font-bold text-white font-mono truncate">{selectedOrg.login}</h1>
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs text-blue-300 shrink-0">
+                    <Building2 className="w-3 h-3" /> Org
+                  </span>
                 </div>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {isLoading ? "Loading…" : `${filtered.length} of ${displayed.length} repositories`}
+                </p>
               </div>
-            )}
-          </div>
-          <p className="text-sm text-slate-400">
-            {isLoading
-              ? "Loading repositories..."
-              : `${filtered.length} of ${displayed.length} repositories${orgParam ? ` in ${orgParam}` : ""}`}
-          </p>
+            </>
+          ) : (
+            <>
+              {user && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={user.avatar_url} alt={user.login} width={36} height={36} className="w-9 h-9 rounded-full ring-1 ring-slate-700 shrink-0" />
+              )}
+              <div className="min-w-0">
+                <h1 className="text-xl font-bold text-white truncate">Personal Repos</h1>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {isLoading ? "Loading…" : `${filtered.length} of ${displayed.length} repositories${user ? ` · @${user.login}` : ""}`}
+                </p>
+              </div>
+            </>
+          )}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 shrink-0">
           {orgs && (
             <OrgSelector orgs={orgs} current={orgParam} onSelect={handleOrgSelect} />
           )}
           <button
             onClick={handleRefresh}
             disabled={isLoading || isValidating}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition-colors disabled:opacity-50"
+            title="Refresh"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 text-sm text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700/60 rounded-lg transition-colors disabled:opacity-40"
           >
             <RefreshCw className={cn("w-3.5 h-3.5", (isLoading || isValidating) && "animate-spin")} />
-            Refresh
+            <span className="hidden sm:inline">Refresh</span>
           </button>
           <button
             onClick={() => setShowShortcuts(true)}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg transition-colors"
+            className="flex items-center justify-center w-8 h-8 text-slate-400 hover:text-white bg-slate-800/80 hover:bg-slate-700 border border-slate-700/60 rounded-lg transition-colors"
             aria-label="Keyboard shortcuts"
             title="Keyboard shortcuts (?)"
           >
@@ -608,31 +603,40 @@ function HomeContent() {
         </div>
       </div>
 
-      {/* Search + filters */}
-      <div className="mb-4 space-y-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-          <input
-            ref={searchRef}
-            type="text"
-            placeholder="Search repositories… (press / to focus)"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={handleSearchKey}
-            className="w-full pl-9 pr-9 py-2.5 bg-slate-800/60 border border-slate-700/50 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/50"
-          />
-          {search && (
-            <button
-              onClick={() => { setSearch(""); searchRef.current?.focus(); }}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-white transition-colors"
-              aria-label="Clear search"
-            >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          )}
+      {/* ── Mission Control ── */}
+      <MissionControl org={orgParam} className="mb-4" />
+
+      {/* ── Search + filter bar ── */}
+      <div className="mb-4 space-y-2.5">
+        {/* Search row */}
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+            <input
+              ref={searchRef}
+              type="text"
+              placeholder="Search repositories… (press / to focus)"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={handleSearchKey}
+              className="w-full pl-9 pr-9 py-2 bg-slate-800/60 border border-slate-700/50 rounded-lg text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-violet-500/40 focus:border-violet-500/50 transition-colors"
+            />
+            {search && (
+              <button
+                onClick={() => { setSearch(""); searchRef.current?.focus(); }}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 p-0.5 rounded text-slate-500 hover:text-white transition-colors"
+                aria-label="Clear search"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+          </div>
+          {/* Quick actions as icon buttons next to search */}
+          <QuickActions org={orgParam} />
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
+        {/* Filter chips row */}
+        <div className="flex items-center gap-1.5 flex-wrap">
           {(["all", "public", "private"] as VisibilityFilter[]).map((v) => (
             <button
               key={v}
@@ -672,9 +676,9 @@ function HomeContent() {
           {(effectiveLangFilter || visFilter !== "all" || search) && (
             <button
               onClick={() => { setLangFilter(null); setVisFilter("all"); setSearch(""); }}
-              className="ml-auto flex items-center gap-1 text-xs text-slate-500 hover:text-white transition-colors"
+              className="ml-auto flex items-center gap-1 text-xs text-slate-500 hover:text-red-400 transition-colors"
             >
-              <X className="w-3 h-3" /> Clear filters
+              <X className="w-3 h-3" /> Clear
             </button>
           )}
         </div>
@@ -689,27 +693,27 @@ function HomeContent() {
 
       <RecentFailuresWidget repos={displayed} />
 
-      {/* Table */}
-      <div className="rounded-xl border border-slate-800 overflow-hidden">
+      {/* ── Repository table ── */}
+      <div className="rounded-xl border border-slate-800/80 overflow-hidden shadow-sm">
         <table className="w-full border-collapse">
           <thead>
-            <tr className="border-b border-slate-800 bg-slate-900/60">
-              <th className="py-2.5 pl-5 pr-4 text-left text-xs font-medium text-slate-400 tracking-wide">
+            <tr className="border-b border-slate-800 bg-slate-900/80">
+              <th className="py-2.5 pl-5 pr-4 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-widest">
                 Repository
               </th>
-              <th className="py-2.5 px-4 text-left text-xs font-medium text-slate-400 tracking-wide w-36">
+              <th className="py-2.5 px-4 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-widest w-32">
                 Status
               </th>
-              <th className="py-2.5 px-4 text-left text-xs font-medium text-slate-400 tracking-wide w-36">
+              <th className="py-2.5 px-4 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-widest w-24">
                 Health
               </th>
-              <th className="py-2.5 px-4 text-left text-xs font-medium text-slate-400 tracking-wide w-48">
-                Run History (10)
+              <th className="py-2.5 px-4 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-widest w-44 hidden sm:table-cell">
+                Last 10 runs
               </th>
-              <th className="py-2.5 px-4 text-left text-xs font-medium text-slate-400 tracking-wide w-36">
-                Trend (30d)
+              <th className="py-2.5 px-4 text-left text-[11px] font-semibold text-slate-500 uppercase tracking-widest w-32 hidden md:table-cell">
+                30-day trend
               </th>
-              <th className="py-2.5 pr-5 w-10" />
+              <th className="py-2.5 pr-5 w-8" />
             </tr>
           </thead>
 
@@ -725,10 +729,14 @@ function HomeContent() {
                   active={i === clampedActiveIndex}
                 />
               ))}
-              {filtered.length === 0 && (
+              {filtered.length === 0 && !isLoading && (
                 <tr>
-                  <td colSpan={6} className="py-16 text-center text-slate-500 text-sm">
-                    No repositories found.
+                  <td colSpan={6} className="py-16 text-center">
+                    <div className="flex flex-col items-center gap-2 text-slate-500">
+                      <Search className="w-8 h-8 opacity-30" />
+                      <p className="text-sm font-medium">No repositories found</p>
+                      <p className="text-xs opacity-70">Try adjusting your search or filters</p>
+                    </div>
                   </td>
                 </tr>
               )}

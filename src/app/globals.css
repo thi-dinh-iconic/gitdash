@@ -1,8 +1,65 @@
 @import "tailwindcss";
 
+/* ── Design system tokens ──────────────────────────────────────────────────── */
 :root {
+  /* Surfaces */
   --background: #020617;
+  --surface-1: #0f172a;   /* app background */
+  --surface-2: #1e293b;   /* card / sidebar */
+  --surface-3: #334155;   /* hover / active */
+  --border:     #334155;
+  --border-subtle: #1e293b;
+
+  /* Foreground */
   --foreground: #f1f5f9;
+  --text-muted: #94a3b8;
+  --text-faint: #475569;
+
+  /* Brand */
+  --brand:      #7c3aed;   /* violet-700 */
+  --brand-soft: #4c1d95;
+
+  /* Status semantics */
+  --status-success: #22c55e;
+  --status-failure: #ef4444;
+  --status-warning: #f59e0b;
+  --status-info:    #3b82f6;
+  --status-neutral: #94a3b8;
+
+  /* Chart palette (8-color cycle) */
+  --chart-1: #7c3aed;
+  --chart-2: #2563eb;
+  --chart-3: #06b6d4;
+  --chart-4: #10b981;
+  --chart-5: #f59e0b;
+  --chart-6: #ef4444;
+  --chart-7: #ec4899;
+  --chart-8: #8b5cf6;
+
+  /* Spacing rhythm */
+  --page-padding: 2rem;
+  --section-gap: 1.5rem;
+
+  /* Transition */
+  --transition-fast: 120ms ease;
+  --transition-base: 200ms ease;
+}
+
+/* Presentation mode — larger spacing and cleaner chrome */
+.presentation-mode {
+  --page-padding: 3rem;
+  --section-gap: 2.5rem;
+  font-size: 1.05rem;
+}
+
+.presentation-mode aside,
+.presentation-mode header {
+  display: none !important;
+}
+
+.presentation-mode main {
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
 body {

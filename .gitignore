@@ -47,3 +47,9 @@ PAT-SECURITY-ANALYSIS.md
 
 # k8s secret manifest — contains real credentials when populated; use --dry-run or ESO instead
 k8s/secret.yaml
+
+
+#AI 
+.codex
+.cursor
+.claude

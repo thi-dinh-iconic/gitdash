@@ -6,6 +6,103 @@ Versioning follows [Semantic Versioning](https://semver.org/).
 
 ---
 
+## [3.1.0] — 2026-03-08
+
+### Overview
+UI/UX overhaul: responsive mobile navigation, redesigned settings page, global footer, skeleton loading states, demo mode, test infrastructure, and a completely rewritten README with intro video and walkthrough demo.
+
+---
+
+### Added
+
+#### Mobile-Responsive Navigation
+- **Mobile hamburger menu** with slide-out drawer, backdrop blur overlay, and close button
+- **Sticky mobile top bar** with GitDash branding
+- Desktop sidebar now uses sticky positioning with proper full-height background — no more gap between nav and page content
+- Sidebar user account section pinned to bottom of viewport
+
+#### Global Footer
+- Consistent footer on all pages (except `/docs` which has its own) showing version, "Open source on GitHub" and "Report an issue" links
+- Version pulled dynamically from `NEXT_PUBLIC_APP_VERSION`
+
+#### Settings Page — Complete Redesign
+- Replaced narrow single-column layout with full-width responsive design
+- **Account section**: horizontal card with avatar, name, mode badge, active status, and inline PAT management
+- **Feature Flags**: responsive card grid (1/2/4 columns) replacing flat toggle list — cards are fully clickable with violet highlight when enabled
+- **Enable all / Disable all** bulk toggle buttons
+- Larger, more accessible "Change PAT" and "Clear & reset" buttons matching design system
+
+#### Demo Mode
+- New `/demo` page and `/api/demo` route for showcasing GitDash without a real GitHub token
+- Demo data generator in `src/lib/demo.ts`
+
+#### Skeleton Loading States
+- Loading skeletons for all major pages: homepage, repo detail, workflow detail, cost analytics, docs
+- `PageSkeleton` reusable component for consistent loading UX
+
+#### New Components
+- `MissionControl` — real-time system status overview
+- `OnboardingChecklist` — guided first-run experience
+- `MetricProvenance` — data source attribution for metrics
+- `PageHeader` — standardized page header component
+- Shell components: `PrimaryRail`, `WorkspacePanel`, `MobileNavDrawer`, `nav-config`
+
+#### Test Infrastructure
+- Vitest configured with `vitest.config.ts`
+- Test scripts added: `npm run test`, `npm run test:watch`, `npm run test:coverage`
+- Initial test suite: anomaly detection tests in `tests/anomaly.test.ts`
+- Added `vitest` and `@vitest/coverage-v8` as dev dependencies
+
+#### Infrastructure Libraries
+- `src/lib/cache.ts` — client-side caching utilities
+- `src/lib/concurrency.ts` — request concurrency control
+- `src/lib/notifier.ts` — notification system
+
+#### Walkthrough Videos & README
+- Added intro video (`walkthrough-output/GitDash__GitHub_Actions.mp4`) and full demo walkthrough (`walkthrough-output/gitdash-walkthrough.webm`)
+- README completely rewritten: video embeds, collapsible screenshot sections, cleaner structure with emoji section headers
+
+---
+
+### Improved
+
+#### Layout & Sidebar
+- Sidebar background now extends full page height (fixed `h-screen` gap issue)
+- `flex-1` spacer ensures user account is always pinned to sidebar bottom
+- AppShell uses `items-stretch` with separate outer wrapper for background vs sticky scroll behavior
+- Docs page removed from full-page route exclusion (now renders within AppShell)
+
+#### Cost Analytics
+- Updated page layout and styling improvements
+
+#### Repository Page
+- Refined homepage repository list styling and layout
+
+#### Database Layer
+- Improved `src/lib/db.ts` with better error handling and query patterns
+
+#### Org Overview API
+- Enhanced `/api/github/org-overview` route with improved data aggregation
+
+#### Alerts API
+- Refined `/api/alerts/route.ts` with improved validation
+
+---
+
+### Changed
+- Bumped version from 3.0.0 to 3.1.0
+- `StatCard` component updated with refined styling
+- Global CSS (`globals.css`) expanded with new utility styles and animations
+
+---
+
+## [3.0.0] — 2026-03-07
+
+### Overview
+Major release: Feature Flags system, DORA metrics on repository overview, PR lifecycle health, historical DB-backed reporting, alert rules engine, and comprehensive built-in documentation.
+
+---
+
 ## [2.2.0] — 2026-03-01
 
 ### Overview

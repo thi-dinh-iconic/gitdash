@@ -92,19 +92,23 @@ export async function PATCH(req: NextRequest) {
   const id = parseInt(searchParams.get("id") ?? "0", 10);
   if (!id) return NextResponse.json({ error: "id is required" }, { status: 400 });
 
-  let body: { enabled?: boolean };
+  let body: { enabled?: boolean; muted_until?: string | null; owner_note?: string | null };
   try {
     body = await req.json();
   } catch {
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
-  if (body.enabled === undefined) {
-    return NextResponse.json({ error: "enabled is required" }, { status: 400 });
+  if (body.enabled === undefined && body.muted_until === undefined && body.owner_note === undefined) {
+    return NextResponse.json({ error: "At least one of enabled, muted_until, or owner_note is required" }, { status: 400 });
   }
 
   try {
-    const rule = await updateAlertRule(id, body.enabled);
+    const rule = await updateAlertRule(id, {
+      enabled: body.enabled,
+      muted_until: body.muted_until,
+      owner_note: body.owner_note,
+    });
     if (!rule) return NextResponse.json({ error: "Not found" }, { status: 404 });
     return NextResponse.json({ rule });
   } catch (e) {

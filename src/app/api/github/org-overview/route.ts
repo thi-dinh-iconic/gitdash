@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { getTokenFromSession } from "@/lib/session";
 import { getOctokit, listOrgRepos, getRepoSummary, type Repo, type RepoSummary } from "@/lib/github";
 import { validateOrg, validatePerPage, safeError } from "@/lib/validation";
+import { withCache } from "@/lib/cache";
+import { pLimitSettled } from "@/lib/concurrency";
 
 const CACHE_TTL = 900; // 15 min — this is an expensive multi-request call
 
@@ -49,6 +51,8 @@ export async function GET(req: NextRequest) {
   const limit = Math.min(limitResult.data, 50);
 
   try {
+    const cacheKey = `org-overview:${org}:${limit}`;
+    const response = await withCache<OrgOverviewResponse>(cacheKey, CACHE_TTL, async () => {
     // 1. List all org repos (already sorted by updated desc)
     const allRepos = await listOrgRepos(token, org);
     const totalRepos = allRepos.length;
@@ -56,37 +60,24 @@ export async function GET(req: NextRequest) {
     // 2. Take top N most recently updated repos for summary fetching
     const topRepos = allRepos.slice(0, limit);
 
-    // 3. Fetch workflow count + summary for each repo in parallel (batched 5 at a time)
+    // 3. Fetch workflow count + summary for each repo with bounded concurrency
     const octokit = getOctokit(token);
-    const BATCH = 10;
-    const results: OrgRepoSummary[] = [];
+    const settled = await pLimitSettled<OrgRepoSummary>(
+      topRepos.map((repo) => async () => {
+        const { data: wfData } = await octokit.rest.actions.listRepoWorkflows({
+          owner: org,
+          repo: repo.name,
+          per_page: 1,
+        });
+        const summary = await getRepoSummary(token, org, repo.name);
+        return { repo, summary, workflow_count: wfData.total_count } satisfies OrgRepoSummary;
+      }),
+      { concurrency: 5 },
+    );
 
-    for (let i = 0; i < topRepos.length; i += BATCH) {
-      const batch = topRepos.slice(i, i + BATCH);
-      const settled = await Promise.allSettled(
-        batch.map(async (repo) => {
-          // Fetch workflow count
-          const { data: wfData } = await octokit.rest.actions.listRepoWorkflows({
-            owner: org,
-            repo: repo.name,
-            per_page: 1,
-          });
-
-          // Fetch repo summary (last 30 runs, computes success rate + trend)
-          const summary = await getRepoSummary(token, org, repo.name);
-
-          return {
-            repo,
-            summary,
-            workflow_count: wfData.total_count,
-          } satisfies OrgRepoSummary;
-        })
-      );
-
-      for (const s of settled) {
-        if (s.status === "fulfilled") results.push(s.value);
-      }
-    }
+    const results: OrgRepoSummary[] = settled
+      .filter((s): s is { status: "fulfilled"; value: OrgRepoSummary } => s.status === "fulfilled")
+      .map((s) => s.value);
 
     // 4. Compute aggregates
     const activeRepos = results.filter(
@@ -109,7 +100,7 @@ export async function GET(req: NextRequest) {
           )
         : 0;
 
-    const response: OrgOverviewResponse = {
+    return {
       org,
       total_repos: totalRepos,
       active_repos: activeRepos,
@@ -118,7 +109,8 @@ export async function GET(req: NextRequest) {
         avg_success_rate: avgSuccessRate,
       },
       repos: results,
-    };
+    } satisfies OrgOverviewResponse;
+    }); // end withCache
 
     return NextResponse.json(response, {
       headers: {

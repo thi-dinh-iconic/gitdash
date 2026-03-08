@@ -86,8 +86,10 @@ function BurnRateBar({
 function SkuTable({ skus }: { skus: SkuBreakdown[] }) {
   if (skus.length === 0) {
     return (
-      <div className="text-sm text-slate-500 text-center py-6">
-        No Actions usage data for this period.
+      <div className="flex flex-col items-center gap-2 py-10 text-center">
+        <Server className="w-8 h-8 text-slate-700" />
+        <p className="text-sm font-medium text-slate-500">No Actions usage data for this period</p>
+        <p className="text-xs text-slate-600 max-w-xs">Usage appears here once GitHub Actions runs are billed in this billing period.</p>
       </div>
     );
   }
@@ -98,35 +100,35 @@ function SkuTable({ skus }: { skus: SkuBreakdown[] }) {
   const totalNet = skus.reduce((s, x) => s + x.net_amount, 0);
 
   return (
-    <div className="overflow-x-auto">
-      <table className="w-full text-sm">
+    <div className="overflow-x-auto -mx-4 px-4 md:mx-0 md:px-0">
+      <table className="w-full text-sm min-w-[640px]">
         <thead>
-          <tr className="border-b border-slate-700/50">
-            <th className="text-left text-xs font-medium text-slate-400 uppercase tracking-wider py-3 px-4">
+          <tr className="border-b border-slate-800 bg-slate-900/50">
+            <th className="text-left text-[11px] font-semibold text-slate-500 uppercase tracking-widest py-2.5 px-4">
               SKU / Runner
             </th>
-            <th className="text-right text-xs font-medium text-slate-400 uppercase tracking-wider py-3 px-4">
+            <th className="text-right text-[11px] font-semibold text-slate-500 uppercase tracking-widest py-2.5 px-4">
               Minutes
             </th>
-            <th className="text-right text-xs font-medium text-slate-400 uppercase tracking-wider py-3 px-4">
+            <th className="text-right text-[11px] font-semibold text-slate-500 uppercase tracking-widest py-2.5 px-4 hidden md:table-cell">
               Price/Unit
             </th>
-            <th className="text-right text-xs font-medium text-slate-400 uppercase tracking-wider py-3 px-4">
+            <th className="text-right text-[11px] font-semibold text-slate-500 uppercase tracking-widest py-2.5 px-4">
               Gross
             </th>
-            <th className="text-right text-xs font-medium text-slate-400 uppercase tracking-wider py-3 px-4">
+            <th className="text-right text-[11px] font-semibold text-slate-500 uppercase tracking-widest py-2.5 px-4">
               Discount
             </th>
-            <th className="text-right text-xs font-medium text-slate-400 uppercase tracking-wider py-3 px-4">
+            <th className="text-right text-[11px] font-semibold text-slate-500 uppercase tracking-widest py-2.5 px-4">
               Net
             </th>
-            <th className="text-right text-xs font-medium text-slate-400 uppercase tracking-wider py-3 px-4">
+            <th className="text-right text-[11px] font-semibold text-slate-500 uppercase tracking-widest py-2.5 px-4">
               Share
             </th>
           </tr>
         </thead>
         <tbody>
-          {skus.map((row) => {
+          {skus.map((row, idx) => {
             const share =
               totalMinutes > 0
                 ? Math.round((row.minutes / totalMinutes) * 100)
@@ -135,25 +137,26 @@ function SkuTable({ skus }: { skus: SkuBreakdown[] }) {
             return (
               <tr
                 key={row.sku}
-                className="border-b border-slate-700/30 hover:bg-slate-800/40 transition-colors"
+                className={cn(
+                  "border-b border-slate-800/60 hover:bg-slate-800/40 transition-colors",
+                  idx % 2 === 1 && "bg-slate-900/30",
+                )}
               >
                 <td className="py-3 px-4">
-                  <div className="flex items-center gap-2">
-                    <span className="p-1.5 rounded-lg border bg-slate-500/10 border-slate-500/20">
-                      <Server className="w-3.5 h-3.5 text-slate-400" />
+                  <div className="flex items-center gap-2.5">
+                    <span className="p-1.5 rounded-lg bg-slate-800 border border-slate-700/60">
+                      <Server className="w-3 h-3 text-slate-400" />
                     </span>
                     <div>
-                      <span className="text-white font-medium">{row.label}</span>
-                      <span className="ml-2 text-[10px] font-mono text-slate-500">
-                        {row.sku}
-                      </span>
+                      <p className="text-white font-medium text-sm">{row.label}</p>
+                      <p className="text-[10px] font-mono text-slate-600 mt-0.5">{row.sku}</p>
                     </div>
                   </div>
                 </td>
-                <td className="text-right py-3 px-4 text-white tabular-nums font-mono">
+                <td className="text-right py-3 px-4 text-white tabular-nums font-mono font-medium">
                   {row.minutes.toLocaleString()}
                 </td>
-                <td className="text-right py-3 px-4 text-slate-400 tabular-nums font-mono text-xs">
+                <td className="text-right py-3 px-4 text-slate-500 tabular-nums font-mono text-xs hidden md:table-cell">
                   {row.price_per_unit > 0
                     ? `$${row.price_per_unit.toFixed(4)}/${row.unit_type}`
                     : "—"}
@@ -161,23 +164,25 @@ function SkuTable({ skus }: { skus: SkuBreakdown[] }) {
                 <td className="text-right py-3 px-4 text-slate-300 tabular-nums font-mono">
                   {formatCurrency(row.gross_amount)}
                 </td>
-                <td className="text-right py-3 px-4 text-green-400 tabular-nums font-mono">
-                  {row.discount_amount > 0
-                    ? `-${formatCurrency(row.discount_amount)}`
-                    : "—"}
+                <td className="text-right py-3 px-4 font-mono">
+                  {row.discount_amount > 0 ? (
+                    <span className="text-green-400 tabular-nums">-{formatCurrency(row.discount_amount)}</span>
+                  ) : (
+                    <span className="text-slate-700">—</span>
+                  )}
                 </td>
                 <td className="text-right py-3 px-4 text-white tabular-nums font-mono font-semibold">
                   {formatCurrency(row.net_amount)}
                 </td>
                 <td className="text-right py-3 px-4">
                   <div className="flex items-center justify-end gap-2">
-                    <div className="w-16 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                    <div className="w-14 h-1.5 bg-slate-800 rounded-full overflow-hidden">
                       <div
-                        className="h-full rounded-full bg-violet-500"
+                        className="h-full rounded-full bg-violet-500/80"
                         style={{ width: `${share}%` }}
                       />
                     </div>
-                    <span className="text-slate-400 tabular-nums text-xs w-8 text-right">
+                    <span className="text-slate-400 tabular-nums text-xs w-7 text-right font-mono">
                       {share}%
                     </span>
                   </div>
@@ -187,22 +192,22 @@ function SkuTable({ skus }: { skus: SkuBreakdown[] }) {
           })}
         </tbody>
         <tfoot>
-          <tr className="border-t border-slate-600/50">
-            <td className="py-3 px-4 text-sm font-semibold text-white">Total</td>
-            <td className="text-right py-3 px-4 text-white tabular-nums font-mono font-semibold">
+          <tr className="border-t-2 border-slate-700/60 bg-slate-900/60">
+            <td className="py-3 px-4 text-sm font-bold text-white">Total</td>
+            <td className="text-right py-3 px-4 text-white tabular-nums font-mono font-bold">
               {totalMinutes.toLocaleString()}
             </td>
-            <td className="text-right py-3 px-4 text-slate-500">—</td>
+            <td className="text-right py-3 px-4 text-slate-600 hidden md:table-cell">—</td>
             <td className="text-right py-3 px-4 text-slate-300 tabular-nums font-mono font-semibold">
               {formatCurrency(totalGross)}
             </td>
             <td className="text-right py-3 px-4 text-green-400 tabular-nums font-mono font-semibold">
-              {totalDiscount > 0 ? `-${formatCurrency(totalDiscount)}` : "—"}
+              {totalDiscount > 0 ? `-${formatCurrency(totalDiscount)}` : <span className="text-slate-700">—</span>}
             </td>
-            <td className="text-right py-3 px-4 text-white tabular-nums font-mono font-semibold">
+            <td className="text-right py-3 px-4 text-white tabular-nums font-mono font-bold">
               {formatCurrency(totalNet)}
             </td>
-            <td className="text-right py-3 px-4 text-slate-400">100%</td>
+            <td className="text-right py-3 px-4 text-slate-500 font-mono text-xs">100%</td>
           </tr>
         </tfoot>
       </table>
@@ -278,7 +283,7 @@ export default function CostAnalyticsPage() {
   const isCurrentMonth = year === DEFAULT_YEAR && month === DEFAULT_MONTH;
 
   return (
-    <div className="p-8 max-w-5xl space-y-6">
+    <div className="p-4 md:p-8 max-w-5xl space-y-5">
       <Breadcrumb
         items={[
           { label: "Repositories", href: "/" },
@@ -286,18 +291,25 @@ export default function CostAnalyticsPage() {
         ]}
       />
 
-      <div>
-        <h1 className="text-2xl font-bold text-white mb-1">Cost Analytics</h1>
-        <p className="text-sm text-slate-400">
-          Actual GitHub Actions spend from the Enhanced Billing API —{" "}
-          {isOrgMode
-            ? "requires your org to be on the GitHub Enhanced Billing Platform (Team / Enterprise)."
-            : "requires a fine-grained PAT with Administration (read) org permission."}
-        </p>
+      {/* Page header */}
+      <div className="flex items-start justify-between gap-3 flex-wrap">
+        <div>
+          <div className="flex items-center gap-2.5 mb-1">
+            <div className="w-8 h-8 rounded-lg bg-violet-500/10 border border-violet-500/20 flex items-center justify-center shrink-0">
+              <DollarSign className="w-4 h-4 text-violet-400" />
+            </div>
+            <h1 className="text-xl font-bold text-white">Cost Analytics</h1>
+          </div>
+          <p className="text-sm text-slate-500 max-w-xl">
+            {isOrgMode
+              ? "Real GitHub Actions spend via the Enhanced Billing API — requires Team or Enterprise plan."
+              : "Real GitHub Actions spend — requires a fine-grained PAT with Administration (read) permission."}
+          </p>
+        </div>
       </div>
 
       {/* Controls: org dropdown + period */}
-      <div className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-4 space-y-3">
+      <div className="bg-slate-900 border border-slate-800 rounded-xl p-4 space-y-3">
 
         {/* Account / Org dropdown */}
         <div className="flex items-center gap-3">
@@ -691,7 +703,7 @@ export default function CostAnalyticsPage() {
           </div>
 
           {/* Summary stat cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <StatCard
               label="Net Billed Amount"
               value={formatCurrency(data.total_net_amount)}
@@ -702,6 +714,8 @@ export default function CostAnalyticsPage() {
               }
               icon={DollarSign}
               iconColor="text-green-400"
+              valueColor="green"
+              accent="green"
             />
             <StatCard
               label="Total Minutes"
@@ -709,6 +723,8 @@ export default function CostAnalyticsPage() {
               sub={`Gross ${formatCurrency(data.total_gross_amount)}`}
               icon={Clock}
               iconColor="text-blue-400"
+              valueColor="blue"
+              accent="blue"
             />
             <StatCard
               label="Daily Burn Rate"
@@ -716,6 +732,8 @@ export default function CostAnalyticsPage() {
               sub={`Day ${data.burn_rate.days_elapsed} of ${data.burn_rate.days_total}`}
               icon={TrendingUp}
               iconColor="text-amber-400"
+              valueColor={data.burn_rate.status === "critical" ? "red" : data.burn_rate.status === "warning" ? "amber" : "default"}
+              accent={data.burn_rate.status === "critical" ? "red" : data.burn_rate.status === "warning" ? "amber" : "none"}
             />
             <StatCard
               label="Projected EOM"
@@ -723,17 +741,17 @@ export default function CostAnalyticsPage() {
               sub={`${MONTH_NAMES[data.period.month - 1]} ${data.period.year}`}
               icon={Gauge}
               iconColor={
-                data.burn_rate.status === "critical"
-                  ? "text-red-400"
-                  : data.burn_rate.status === "warning"
-                    ? "text-amber-400"
-                    : "text-green-400"
+                data.burn_rate.status === "critical" ? "text-red-400"
+                  : data.burn_rate.status === "warning" ? "text-amber-400"
+                  : "text-green-400"
               }
+              valueColor={data.burn_rate.status === "critical" ? "red" : data.burn_rate.status === "warning" ? "amber" : "green"}
+              accent={data.burn_rate.status === "critical" ? "red" : data.burn_rate.status === "warning" ? "amber" : "green"}
             />
           </div>
 
           {/* Burn Rate Projection */}
-          <div className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-6 space-y-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 space-y-4">
             <div className="flex items-center justify-between">
               <div>
                 <h2 className="text-sm font-semibold text-white">
